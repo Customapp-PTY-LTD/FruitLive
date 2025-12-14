@@ -700,6 +700,12 @@ var _dataFunctions = function () {
             return await this.callFunction('create_block_simple', params, token);
         },
 
+        // ===== CROP TYPES FUNCTIONS =====
+
+        getCropTypes: async function (token = null) {
+            return await this.callFunction('get_crop_types', {}, token);
+        },
+
         // ===== VARIETIES FUNCTIONS =====
 
         getVarieties: async function (token = null) {
