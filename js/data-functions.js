@@ -178,12 +178,10 @@ var _dataFunctions = function () {
          */
         createUser: async function (userData, token = null) {
             const params = {
-                first_name: userData.first_name,
-                last_name: userData.last_name,
-                email: userData.email,
-                phone: userData.phone || '',
-                role_id: userData.role_id,
-                password: userData.password
+                p_email: userData.email,
+                p_username: userData.username || null,
+                p_role_id: userData.role_id || null,
+                p_password: userData.password || null
             };
             return await this.callFunction('create_user_simple', params, token);
         },
@@ -193,13 +191,12 @@ var _dataFunctions = function () {
          */
         updateUser: async function (userId, userData, token = null) {
             const params = {
-                user_id: userId,
-                first_name: userData.first_name,
-                last_name: userData.last_name,
-                email: userData.email,
-                phone: userData.phone || '',
-                role_id: userData.role_id,
-                is_active: userData.is_active !== undefined ? userData.is_active : true
+                p_user_id: userId,
+                p_email: userData.email || null,
+                p_username: userData.username || null,
+                p_role_id: userData.role_id || null,
+                p_is_active: userData.is_active !== undefined ? userData.is_active : null,
+                p_password: userData.password || null
             };
 
             return await this.callFunction('update_user_simple', params, token);
@@ -209,7 +206,14 @@ var _dataFunctions = function () {
          * Delete user (hard delete)
          */
         deleteUser: async function (userId, token = null) {
-            return await this.callFunction('delete_user_hard', { user_id: userId }, token);
+            return await this.callFunction('delete_user_hard', { p_user_id: userId }, token);
+        },
+
+        /**
+         * Deactivate user (soft delete)
+         */
+        deactivateUser: async function (userId, token = null) {
+            return await this.callFunction('deactivate_user', { p_user_id: userId }, token);
         },
 
         // ===== ROLE MANAGEMENT FUNCTIONS =====
@@ -233,9 +237,9 @@ var _dataFunctions = function () {
          */
         createRole: async function (roleData, token = null) {
             const params = {
-                role_name: roleData.role_name,
-                description: roleData.description,
-                is_active: roleData.is_active !== undefined ? roleData.is_active : true
+                p_role_name: roleData.role_name,
+                p_description: roleData.description || null,
+                p_is_active: roleData.is_active !== undefined ? roleData.is_active : true
             };
             return await this.callFunction('create_role_simple', params, token);
         },
@@ -245,10 +249,10 @@ var _dataFunctions = function () {
          */
         updateRole: async function (roleId, roleData, token = null) {
             const params = {
-                role_id: roleId,
-                role_name: roleData.role_name,
-                description: roleData.description,
-                is_active: roleData.is_active
+                p_role_id: roleId,
+                p_role_name: roleData.role_name || null,
+                p_description: roleData.description || null,
+                p_is_active: roleData.is_active !== undefined ? roleData.is_active : null
             };
             return await this.callFunction('update_role_simple', params, token);
         },
@@ -301,11 +305,11 @@ var _dataFunctions = function () {
          */
         createRolePermission: async function (permissionData, token = null) {
             const params = {
-                role_id: permissionData.role_id,
-                object_type: permissionData.object_type,
-                object_name: permissionData.object_name,
-                operation: permissionData.operation,
-                allowed: permissionData.is_active !== undefined ? permissionData.is_active : true
+                p_role_id: permissionData.role_id,
+                p_object_type: permissionData.object_type,
+                p_object_name: permissionData.object_name,
+                p_operation: permissionData.operation,
+                p_allowed: permissionData.is_active !== undefined ? permissionData.is_active : true
             };
             return await this.callFunction('create_role_permission_simple', params, token);
         },
@@ -315,12 +319,12 @@ var _dataFunctions = function () {
          */
         updateRolePermission: async function (permissionId, permissionData, token = null) {
             const params = {
-                permission_id: permissionId,
-                role_id: permissionData.role_id,
-                object_type: permissionData.object_type,
-                object_name: permissionData.object_name,
-                operation: permissionData.operation,
-                allowed: permissionData.is_active
+                p_permission_id: permissionId,
+                p_role_id: permissionData.role_id || null,
+                p_object_type: permissionData.object_type || null,
+                p_object_name: permissionData.object_name || null,
+                p_operation: permissionData.operation || null,
+                p_allowed: permissionData.is_active !== undefined ? permissionData.is_active : null
             };
             return await this.callFunction('update_role_permission_simple', params, token);
         },
@@ -329,7 +333,7 @@ var _dataFunctions = function () {
          * Delete role permission (hard delete)
          */
         deleteRolePermission: async function (permissionId, token = null) {
-            return await this.callFunction('delete_role_permission_simple', { permission_id: permissionId }, token);
+            return await this.callFunction('delete_role_permission_simple', { p_permission_id: permissionId }, token);
         },
 
         // ===== DRIVER MANAGEMENT FUNCTIONS =====
