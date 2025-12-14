@@ -1,0 +1,362 @@
+<!-- Labour Allocation Module -->
+<div class="labour-container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2 class="fw-bold">Labour Allocation</h2>
+            <p class="text-muted" id="labourDate">
+                <span id="currentDate"></span> | <span id="farmInfo"></span>
+            </p>
+        </div>
+        <div class="col-md-6 text-end">
+            <button class="btn btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#sharedWorkersModal">
+                <i class="bi bi-diagram-3 me-1"></i>Shared Workers
+            </button>
+            <button class="btn btn-labour me-2" data-bs-toggle="modal" data-bs-target="#bulkAllocationModal">
+                <i class="bi bi-lightning-fill me-1"></i>Bulk Allocation
+            </button>
+            <button class="btn btn-outline-secondary" onclick="printSummary()">
+                <i class="bi bi-printer me-1"></i>Print Summary
+            </button>
+        </div>
+    </div>
+
+    <!-- Shared Workers Alert -->
+    <div class="row mb-4" id="sharedWorkersAlert" style="display: none;">
+        <div class="col-12">
+            <div class="alert alert-info-custom" role="alert">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong><i class="bi bi-people-fill me-2"></i><span id="sharedWorkerCount">0</span> Shared Workers</strong>
+                        <p class="mb-0 mt-1 small" id="sharedWorkerDetails"></p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="manageSharedWorkers()">
+                        <i class="bi bi-gear me-1"></i>Manage Transfer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Staff</h6>
+                        <h3 class="fw-bold mb-0" id="totalStaff">0</h3>
+                        <small class="text-muted" id="staffBreakdown">Loading...</small>
+                    </div>
+                    <i class="bi bi-people-fill fs-1 text-primary"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Present</h6>
+                        <h3 class="fw-bold mb-0 text-success" id="presentCount">0</h3>
+                    </div>
+                    <i class="bi bi-check-circle-fill fs-1 text-success"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Absent</h6>
+                        <h3 class="fw-bold mb-0 text-danger" id="absentCount">0</h3>
+                    </div>
+                    <i class="bi bi-x-circle-fill fs-1 text-danger"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Not Allocated</h6>
+                        <h3 class="fw-bold mb-0 text-warning" id="unallocatedCount">0</h3>
+                    </div>
+                    <i class="bi bi-exclamation-triangle-fill fs-1 text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions (Indunas) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="fw-bold mb-3">Quick Actions (Team Leaders)</h5>
+        </div>
+        <div class="col-md-3">
+            <div class="quick-action" onclick="openTeam('pruning')">
+                <i class="bi bi-scissors fs-3 mb-2"></i>
+                <h6 class="mb-1">Pruning Team</h6>
+                <small id="pruningCount">0 workers</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="quick-action" onclick="openTeam('mowing')">
+                <i class="bi bi-gear-fill fs-3 mb-2"></i>
+                <h6 class="mb-1">Mowing Team</h6>
+                <small id="mowingCount">0 workers</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="quick-action" onclick="openTeam('weeding')">
+                <i class="bi bi-flower1 fs-3 mb-2"></i>
+                <h6 class="mb-1">Weeding Team</h6>
+                <small id="weedingCount">0 workers</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="quick-action" onclick="openTeam('general')">
+                <i class="bi bi-tools fs-3 mb-2"></i>
+                <h6 class="mb-1">General Labour</h6>
+                <small id="generalCount">0 workers</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Farm</label>
+                    <select class="form-select" id="farmFilter" onchange="applyFilters()">
+                        <option value="">All Farms</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Block</label>
+                    <select class="form-select" id="blockFilter" onchange="applyFilters()">
+                        <option value="">All Blocks</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Task Type</label>
+                    <select class="form-select" id="taskFilter" onchange="applyFilters()">
+                        <option value="">All Tasks</option>
+                        <option value="Pruning">Pruning</option>
+                        <option value="Mowing">Mowing</option>
+                        <option value="Weeding">Weeding</option>
+                        <option value="Harvesting">Harvesting</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Status</label>
+                    <select class="form-select" id="statusFilter" onchange="applyFilters()">
+                        <option value="">All Status</option>
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="Late">Late</option>
+                        <option value="Not Allocated">Not Allocated</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Worker List -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-list-task me-2"></i>Worker Allocations</h5>
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Search workers..." id="workerSearch" onkeyup="searchWorkers()">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="workersTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Worker</th>
+                            <th>ID Number</th>
+                            <th>Status</th>
+                            <th>Farm</th>
+                            <th>Block</th>
+                            <th>Variety</th>
+                            <th>Task</th>
+                            <th>Rows</th>
+                            <th>Team Leader</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workersTableBody">
+                        <tr>
+                            <td colspan="10" class="text-center text-muted py-4">
+                                <i class="bi bi-hourglass-split fs-3"></i>
+                                <p class="mb-0 mt-2">Loading worker allocations...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted" id="paginationInfo">Showing 0 of 0 workers</div>
+                <nav>
+                    <ul class="pagination mb-0" id="pagination">
+                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Allocation Modal -->
+<div class="modal fade" id="editAllocationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Worker Allocation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editWorkerId">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Worker</label>
+                    <input type="text" class="form-control" id="editWorkerName" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Farm</label>
+                    <select class="form-select" id="editFarm">
+                        <option value="">Select Farm</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Block</label>
+                    <select class="form-select" id="editBlock">
+                        <option value="">Select Block</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Variety</label>
+                    <select class="form-select" id="editVariety">
+                        <option value="">Select Variety</option>
+                        <option>Granny Smith</option>
+                        <option>Golden Delicious</option>
+                        <option>Pink Lady</option>
+                        <option>Fuji</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Task</label>
+                    <select class="form-select" id="editTask">
+                        <option value="">Select Task</option>
+                        <option>Pruning</option>
+                        <option>Mowing</option>
+                        <option>Weeding</option>
+                        <option>Harvesting</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label class="form-label fw-bold">Row Start</label>
+                        <input type="number" class="form-control" id="editRowStart">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold">Row End</label>
+                        <input type="number" class="form-control" id="editRowEnd">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-labour" onclick="saveAllocation()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Allocation Modal -->
+<div class="modal fade" id="bulkAllocationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-lightning-fill me-2"></i>Bulk Allocation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Allocate multiple workers to the same location and task</p>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Select Workers</label>
+                    <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;" id="bulkWorkerList">
+                        <div class="text-center text-muted py-3">
+                            <small>Loading available workers...</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Farm</label>
+                        <select class="form-select" id="bulkFarm">
+                            <option value="">Select Farm</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Block</label>
+                        <select class="form-select" id="bulkBlock">
+                            <option value="">Select Block</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Variety</label>
+                        <select class="form-select" id="bulkVariety">
+                            <option value="">Select Variety</option>
+                            <option>Granny Smith</option>
+                            <option>Golden Delicious</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Task</label>
+                        <select class="form-select" id="bulkTask">
+                            <option value="">Select Task</option>
+                            <option>Pruning</option>
+                            <option>Mowing</option>
+                            <option>Weeding</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-labour" onclick="saveBulkAllocation()">Allocate Workers</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shared Workers Modal -->
+<div class="modal fade" id="sharedWorkersModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-diagram-3 me-2"></i>Shared Workers Management</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Manage workers shared between farms</p>
+                <div id="sharedWorkersList" class="list-group">
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-hourglass-split fs-3"></i>
+                        <p class="mb-0 mt-2">Loading shared workers...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

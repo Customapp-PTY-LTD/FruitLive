@@ -172,6 +172,12 @@ function loadModules() {
     const modules = [
         {
             icon: 'bi-people-fill',
+            title: 'Labour Allocation',
+            description: 'Daily allocation, attendance, task tracking',
+            route: 'labour-grid'
+        },
+        {
+            icon: 'bi-person-badge',
             title: 'Users Management',
             description: 'Manage users, roles, and permissions',
             route: 'users-grid'

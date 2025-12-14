@@ -36,6 +36,17 @@
                 "css/dashboard.css"
             ]
         },
+        "labour-grid": {
+            "description": "Labour Allocation",
+            "path": "labour",
+            "html": "html/labour_grid.html",
+            "js": [
+                "js/labour_grid.js"
+            ],
+            "css": [
+                "css/labour_grid.css"
+            ]
+        },
         "users-grid": {
             "description": "User Management",
             "path": "users",

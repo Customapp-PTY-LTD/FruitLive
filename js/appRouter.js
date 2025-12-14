@@ -229,6 +229,11 @@ var _appRouter = function () {
                         initializeDashboard();
                     }
                 },
+                'labour-grid': () => {
+                    if (typeof initializeLabourGrid === 'function') {
+                        initializeLabourGrid();
+                    }
+                },
                 'users-grid': () => {
                     if (typeof initializeUsersGrid === 'function') {
                         initializeUsersGrid();
