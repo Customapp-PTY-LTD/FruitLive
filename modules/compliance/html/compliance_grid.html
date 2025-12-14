@@ -7,28 +7,22 @@
             <p class="text-muted">Global GAP, Caesar Audits & Training Certification</p>
         </div>
         <div class="col-md-6 text-end">
-            <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#editDocumentModal" onclick="document.getElementById('editDocumentId').value = ''">
-                <i class="bi bi-plus-lg me-1"></i>Add Document
-            </button>
-            <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editCertificateModal" onclick="document.getElementById('editCertificateId').value = ''">
-                <i class="bi bi-plus-lg me-1"></i>Add Certificate
-            </button>
-            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editAuditModal" onclick="scheduleAudit()">
-                <i class="bi bi-calendar-event me-1"></i>Schedule Audit
-            </button>
-        </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Farm</label>
-                    <select class="form-select" id="farmFilter">
-                        <option value="all">All Farms</option>
-                    </select>
-                </div>
+            <div class="mb-2">
+                <label class="form-label fw-bold me-2">Farm:</label>
+                <select class="form-select form-select-sm d-inline-block" id="farmFilter" style="width: auto; min-width: 200px;">
+                    <option value="all">All Farms</option>
+                </select>
+            </div>
+            <div>
+                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#editDocumentModal" onclick="document.getElementById('editDocumentId').value = ''">
+                    <i class="bi bi-plus-lg me-1"></i>Add Document
+                </button>
+                <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editCertificateModal" onclick="document.getElementById('editCertificateId').value = ''">
+                    <i class="bi bi-plus-lg me-1"></i>Add Certificate
+                </button>
+                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editAuditModal" onclick="scheduleAudit()">
+                    <i class="bi bi-calendar-event me-1"></i>Schedule Audit
+                </button>
             </div>
         </div>
     </div>
@@ -42,17 +36,17 @@
                         <div class="col-md-8">
                             <h4 class="mb-3">Overall Compliance Score</h4>
                             <div class="progress" style="height: 25px;">
-                                <div class="progress-bar bg-success" style="width: 94%;" role="progressbar">
-                                    <span class="fw-bold">94%</span>
+                                <div class="progress-bar bg-success" id="complianceProgressBar" style="width: 0%;" role="progressbar">
+                                    <span class="fw-bold" id="complianceScoreText">0%</span>
                                 </div>
                             </div>
                             <div class="mt-3">
-                                <small class="text-muted">Next audit: Global GAP - 15 January 2026</small>
+                                <small class="text-muted" id="nextAuditText">Loading next audit...</small>
                             </div>
                         </div>
                         <div class="col-md-4 text-center">
-                            <div class="display-3 text-success">94%</div>
-                            <p class="text-muted mb-0">Audit Ready</p>
+                            <div class="display-3 text-success" id="complianceScoreDisplay">0%</div>
+                            <p class="text-muted mb-0" id="complianceStatus">Calculating...</p>
                         </div>
                     </div>
                 </div>
@@ -67,7 +61,7 @@
                 <div class="card-body">
                     <i class="bi bi-file-earmark-check-fill fs-1 mb-2 text-primary"></i>
                     <h5 class="fw-bold">Documents Complete</h5>
-                    <div class="display-6">31/33</div>
+                    <div class="display-6" id="documentsComplete">0/0</div>
                     <small class="text-muted">Global GAP folders</small>
                 </div>
             </div>
@@ -77,7 +71,7 @@
                 <div class="card-body">
                     <i class="bi bi-award-fill fs-1 mb-2 text-warning"></i>
                     <h5 class="fw-bold">Certificates Expiring</h5>
-                    <div class="display-6 text-warning">3</div>
+                    <div class="display-6 text-warning" id="certificatesExpiring">0</div>
                     <small class="text-muted">Within 7 days</small>
                 </div>
             </div>
@@ -87,7 +81,7 @@
                 <div class="card-body">
                     <i class="bi bi-person-badge-fill fs-1 mb-2 text-success"></i>
                     <h5 class="fw-bold">Certified Staff</h5>
-                    <div class="display-6 text-success">168/182</div>
+                    <div class="display-6 text-success" id="certifiedStaff">0/0</div>
                     <small class="text-muted">Currently valid</small>
                 </div>
             </div>
@@ -141,7 +135,9 @@
                     <h5 class="mb-0 fw-bold">Staff Training Matrix</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Training certificates tracking coming soon...</p>
+                    <div id="certificatesList">
+                        <p class="text-muted">Loading certificates...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -304,17 +300,13 @@
                             </select>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Findings</label>
-                            <textarea class="form-control" id="editAuditFindings" rows="3"></textarea>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Recommendations</label>
-                            <textarea class="form-control" id="editAuditRecommendations" rows="3"></textarea>
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="editAuditNotes" rows="4" placeholder="Enter audit findings, recommendations, and any additional notes..."></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeAuditModal()">Cancel</button>
                     <button type="button" class="btn btn-primary" onclick="saveAudit()">Save Audit</button>
                 </div>
             </div>
