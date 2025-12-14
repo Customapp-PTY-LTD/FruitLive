@@ -1,20 +1,306 @@
-/* Admin Module Styles */
+/**
+ * System Administration Module Styles
+ */
+
+/* Page Header */
+.admin-grid h2 {
+    color: #2c3e50;
+}
+
+/* Summary Cards */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card .fs-1 {
+    font-size: 3rem !important;
+}
+
+/* Tabs */
+.nav-tabs {
+    border-bottom: 2px solid #e9ecef;
+}
+
+.nav-tabs .nav-link {
+    color: #6c757d;
+    font-weight: 500;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.75rem 1.5rem;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #495057;
+    border-color: transparent;
+    background-color: #f8f9fa;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    border-bottom-color: #0d6efd;
+    background-color: transparent;
+}
+
+/* Farm Cards */
 .farm-card {
-    border-left: 4px solid var(--primary);
-    transition: all 0.2s;
-    margin-bottom: 1rem;
+    border-left: 4px solid #0d6efd;
 }
 
 .farm-card:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transform: translateX(4px);
+    border-left-color: #0a58ca;
 }
 
-.permission-badge {
+/* Progress Bars */
+.progress {
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+/* Tables */
+.table-responsive {
+    border-radius: 8px;
+}
+
+.table thead th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.table tbody td {
+    vertical-align: middle;
+}
+
+/* Badges */
+.badge {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+/* Role Badges */
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-primary {
+    background-color: #0d6efd !important;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+/* Button Groups */
+.btn-group .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-group .btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-group .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Modal Styling */
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.modal-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Form Elements */
+.form-label {
+    color: #495057;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+/* Resource Transfer Form */
+#createTransferForm .form-control,
+#createTransferForm .form-select {
+    margin-bottom: 0.5rem;
+}
+
+/* Stats Sidebar */
+.card-body .d-flex {
+    align-items: center;
+}
+
+.card-body .d-flex small {
+    color: #6c757d;
+}
+
+.card-body .d-flex strong {
+    color: #2c3e50;
+}
+
+/* Labour Pool Distribution */
+#labourPoolContainer .progress {
+    margin-bottom: 0.5rem;
+}
+
+#labourPoolContainer .progress-bar {
+    background-color: #198754;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Crop Distribution */
+#cropDistributionContainer .progress-bar {
+    background-color: #0d6efd;
+}
+
+/* Loading States */
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Empty States */
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .nav-tabs .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .card .fs-1 {
+        font-size: 2rem !important;
+    }
+    
+    .table {
+        font-size: 0.875rem;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+    }
+}
+
+/* Chart Containers */
+#cropDistributionChart,
+#labourDistributionChart {
+    max-height: 250px;
+}
+
+/* Analytics Cards */
+#analytics .text-center {
+    padding: 1.5rem;
+}
+
+#analytics .text-center h3 {
+    margin-bottom: 0.5rem;
+}
+
+#analytics .border {
+    border: 2px solid #e9ecef !important;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+#analytics .border:hover {
+    border-color: #0d6efd !important;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.1);
+}
+
+/* Farm Portfolio Cards */
+#farmsListContainer .card {
+    border-left: 4px solid #0d6efd;
+    transition: all 0.2s;
+}
+
+#farmsListContainer .card:hover {
+    border-left-width: 6px;
+    transform: translateX(2px);
+}
+
+/* Role Definitions Section */
+.card-body .badge {
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Transfer Table Status */
+.table tbody td code {
+    background-color: #f8f9fa;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
-    font-size: 0.75rem;
-    margin-right: 0.25rem;
-    display: inline-block;
+    font-size: 0.85rem;
+    color: #495057;
 }
-
