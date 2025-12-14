@@ -152,6 +152,12 @@ async function populateVarietySelector(selectorId, selectedVarietyId = null, inc
     }
     
     try {
+        if (typeof dataFunctions === 'undefined' || !dataFunctions.getVarieties) {
+            console.error('dataFunctions.getVarieties is not available');
+            selector.innerHTML = '<option value="">Data functions not available</option>';
+            return;
+        }
+        
         const varieties = await dataFunctions.getVarieties();
         
         // Clear existing options

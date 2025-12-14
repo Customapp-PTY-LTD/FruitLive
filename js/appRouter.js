@@ -2,7 +2,7 @@ var _appRouter = function () {
     return {
         version: '2.01',
         routeConfigPath: './js/appRouteConfig.json',
-        baseScripts: ['js/data-functions.js'],
+        baseScripts: ['js/data-functions.js', 'js/farm-selector-utils.js'],
         //--Set in the appRouteConfig.json
         SupabaseUrl: "",
         LambdaProxyUrl: "",
@@ -10,6 +10,7 @@ var _appRouter = function () {
 
         breadCrumbs: [],
         routeParams: {},
+        currentRoute: null,
         //------------
         init: async () => {
 
@@ -33,10 +34,18 @@ var _appRouter = function () {
             //bind nav event
             await _appRouter.loadRouteConfig();
 
-            var activePage = sessionStorage.getItem('lastActivePage') || '';
+            // Check localStorage first (persists across sessions), then sessionStorage, then default
+            var activePage = localStorage.getItem('lastActivePage') || 
+                           sessionStorage.getItem('lastActivePage') || 
+                           '';
 
             if (!activePage) {
                 activePage = _appRouter.defaultRoute;
+            }
+            
+            // Store in sessionStorage for current session
+            if (activePage) {
+                sessionStorage.setItem('lastActivePage', activePage);
             }
             if (typeof _common !== 'undefined' && _common.getUrlParams && _common.getUrlParams().ar) {
                 activePage = '';
@@ -294,15 +303,6 @@ var _appRouter = function () {
                         initializeCompaniesGrid();
                     }
                 },
-                'dashboard': () => {
-                    if (typeof initializeDashboard === 'function') {
-                        initializeDashboard();
-                    } else if (typeof _dashboard !== 'undefined' && typeof _dashboard.init === 'function') {
-                        _dashboard.init();
-                    } else {
-                        console.warn('Dashboard initialization function not found');
-                    }
-                },
                 'drivers-grid': () => {
                     if (typeof initializeDriversGrid === 'function') {
                         initializeDriversGrid();
@@ -398,7 +398,11 @@ var _appRouter = function () {
             return result;
         },
         routeTo: (routeName, addBreadCrumb, params) => {
+            // Store in both sessionStorage (current session) and localStorage (persist across sessions)
             sessionStorage.setItem('lastActivePage', routeName);
+            localStorage.setItem('lastActivePage', routeName);
+            _appRouter.currentRoute = routeName;
+            
             _appRouter.loadContent({
                 routeName: routeName,
                 elementSelector: _appRouter.contentContainer
@@ -442,6 +446,9 @@ var _appRouter = function () {
             else {
                 // If no form or iframe is displayed, navigate directly
                 sessionStorage.setItem('lastActivePage', routeName);
+                localStorage.setItem('lastActivePage', routeName);
+                _appRouter.currentRoute = routeName;
+                
                 await _appRouter.loadContent({
                     routeName: routeName,
                     elementSelector: _appRouter.contentContainer

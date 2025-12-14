@@ -55,12 +55,66 @@
 
 .grid-actions .btn {
     margin-right: 0.25rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.4rem 0.75rem;
     font-size: 0.875rem;
+    font-weight: 600;
+    border-width: 2px;
+    transition: all 0.2s ease;
 }
 
 .grid-actions .btn:last-child {
     margin-right: 0;
+}
+
+/* Action Buttons - Enhanced Visibility */
+.btn-sm {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    font-weight: 600;
+    min-width: 36px;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-primary,
+.btn-outline-info,
+.btn-outline-secondary,
+.btn-outline-success,
+.btn-outline-danger {
+    border-width: 2px;
+    font-weight: 600;
+    padding: 0.4rem 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-primary {
+    border-color: var(--phoenix-primary);
+    color: var(--phoenix-primary);
+    background-color: rgba(var(--phoenix-primary-rgb), 0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--phoenix-primary);
+    border-color: var(--phoenix-primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(var(--phoenix-primary-rgb), 0.3);
+}
+
+.btn-outline-info:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(var(--phoenix-info-rgb), 0.3);
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(var(--phoenix-secondary-rgb), 0.3);
+}
+
+.btn-sm i {
+    font-size: 1rem;
+    line-height: 1;
 }
 
 /* Search and filters */
@@ -81,7 +135,7 @@
 }
 
 .filter-accordion .accordion-button:focus {
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(var(--phoenix-primary-rgb), 0.25);
 }
 
 /* Form sections */
@@ -202,7 +256,7 @@
 
 /* Animation for smooth transitions */
 .table tbody tr {
-    transition: background-color 0.2s ease;
+    transition: background-color 0.3s ease;
 }
 
 .table tbody tr:hover {
@@ -230,7 +284,10 @@
 /* Card enhancements */
 .card {
     border: 1px solid var(--phoenix-border-color);
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    box-shadow: var(--phoenix-box-shadow);
+    background-color: var(--phoenix-card-bg);
+    color: var(--phoenix-text-color);
+    transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 .card-header {
@@ -249,16 +306,17 @@
 }
 
 .alert-warning {
-    background-color: rgba(255, 193, 7, 0.1);
-    color: #856404;
+    background-color: rgba(var(--phoenix-warning-rgb), 0.1);
+    color: var(--phoenix-text-color);
     border-left: 4px solid var(--phoenix-warning);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Form control focus states */
 .form-control:focus,
 .form-select:focus {
     border-color: var(--phoenix-primary);
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(var(--phoenix-primary-rgb), 0.25);
 }
 
 /* Input group styling */

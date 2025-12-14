@@ -145,6 +145,12 @@ class AuthService {
      * Sign out user
      */
     signOut() {
+        // Store last active page before logout
+        const lastActivePage = sessionStorage.getItem('lastActivePage') || 
+                             (typeof _appRouter !== 'undefined' && _appRouter.currentRoute) || 
+                             'dashboard';
+        localStorage.setItem('lastActivePage', lastActivePage);
+        
         // Get cc parameter from localStorage (stored as client_guid during sign-in)
         const ccParam = localStorage.getItem('client_guid');
         

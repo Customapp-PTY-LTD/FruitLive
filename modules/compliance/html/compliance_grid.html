@@ -7,12 +7,29 @@
             <p class="text-muted">Global GAP, Caesar Audits & Training Certification</p>
         </div>
         <div class="col-md-6 text-end">
-            <button class="btn btn-primary me-2">
-                <i class="bi bi-download me-1"></i>Generate Audit Report
+            <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#editDocumentModal" onclick="document.getElementById('editDocumentId').value = ''">
+                <i class="bi bi-plus-lg me-1"></i>Add Document
             </button>
-            <button class="btn btn-outline-secondary">
+            <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editCertificateModal" onclick="document.getElementById('editCertificateId').value = ''">
+                <i class="bi bi-plus-lg me-1"></i>Add Certificate
+            </button>
+            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editAuditModal" onclick="scheduleAudit()">
                 <i class="bi bi-calendar-event me-1"></i>Schedule Audit
             </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Farm</label>
+                    <select class="form-select" id="farmFilter">
+                        <option value="all">All Farms</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -110,7 +127,9 @@
                     <h5 class="mb-0 fw-bold">33 Required Folders</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Global GAP compliance tracking coming soon...</p>
+                    <div id="documentsList">
+                        <p class="text-muted">Loading documents...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -134,7 +153,9 @@
                     <h5 class="mb-0 fw-bold">Caesar Labour Audit Requirements</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Caesar audit tracking coming soon...</p>
+                    <div id="auditsList">
+                        <p class="text-muted">Loading audits...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -151,5 +172,154 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit Document Modal -->
+    <div class="modal fade" id="editDocumentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add/Edit Compliance Document</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editDocumentId" value="">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editDocumentTitle" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Document Type <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editDocumentType" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <input type="text" class="form-control" id="editDocumentCategory">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editDocumentStatus">
+                                <option value="active">Active</option>
+                                <option value="expired">Expired</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" id="editDocumentExpiry">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveComplianceDocument()">Save Document</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Certificate Modal -->
+    <div class="modal fade" id="editCertificateModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add/Edit Certificate</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editCertificateId" value="">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Certificate Type <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editCertificateType" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Certificate Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editCertificateNumber" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Issued Date</label>
+                            <input type="date" class="form-control" id="editCertificateIssued">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" id="editCertificateExpiry">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Issuing Authority</label>
+                            <input type="text" class="form-control" id="editCertificateAuthority">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editCertificateStatus">
+                                <option value="active">Active</option>
+                                <option value="expired">Expired</option>
+                                <option value="revoked">Revoked</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCertificate()">Save Certificate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Audit Modal -->
+    <div class="modal fade" id="editAuditModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add/Edit Audit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editAuditId" value="">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Audit Type <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editAuditType" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Audit Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editAuditDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Auditor Name</label>
+                            <input type="text" class="form-control" id="editAuditorName">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Score (%)</label>
+                            <input type="number" class="form-control" id="editAuditScore" min="0" max="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editAuditStatus">
+                                <option value="scheduled">Scheduled</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Findings</label>
+                            <textarea class="form-control" id="editAuditFindings" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Recommendations</label>
+                            <textarea class="form-control" id="editAuditRecommendations" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAudit()">Save Audit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 

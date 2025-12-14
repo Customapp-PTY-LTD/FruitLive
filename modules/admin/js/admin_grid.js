@@ -14,28 +14,58 @@ let adminData = {
 /**
  * Initialize Admin Grid Module
  */
-function initializeAdminGrid() {
-    console.log('Initializing Admin Grid Module...');
-    
-    // Set up Bootstrap tab event handlers
-    const tabElements = document.querySelectorAll('button[data-bs-toggle="tab"]');
-    tabElements.forEach(tab => {
-        tab.addEventListener('shown.bs.tab', function (event) {
-            const targetId = event.target.getAttribute('data-bs-target');
-            console.log('Tab switched to:', targetId);
-            handleTabSwitch(targetId);
+async function initializeAdminGrid() {
+    try {
+        console.log('Initializing Admin Grid Module...');
+        
+        // Set up Bootstrap tab event handlers
+        const tabElements = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabElements.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (event) {
+                const targetId = event.target.getAttribute('data-bs-target');
+                console.log('Tab switched to:', targetId);
+                handleTabSwitch(targetId);
+            });
         });
-    });
-    
-    // Load initial data
-    loadPortfolioSummary();
-    loadFarms();
-    loadUsers();
-    loadSharedResources();
-    loadCropTypes();
-    
-    // Set up form handlers
-    setupFormHandlers();
+        
+        // Load initial data with error handling
+        try {
+            await loadPortfolioSummary();
+        } catch (error) {
+            console.error('Error loading portfolio summary:', error);
+        }
+        
+        try {
+            await loadFarms();
+        } catch (error) {
+            console.error('Error loading farms:', error);
+        }
+        
+        try {
+            await loadUsers();
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+        
+        try {
+            await loadSharedResources();
+        } catch (error) {
+            console.error('Error loading shared resources:', error);
+        }
+        
+        try {
+            await loadCropTypes();
+        } catch (error) {
+            console.error('Error loading crop types:', error);
+        }
+        
+        // Set up form handlers
+        if (typeof setupFormHandlers === 'function') {
+            setupFormHandlers();
+        }
+    } catch (error) {
+        console.error('Error initializing Admin Grid:', error);
+    }
 }
 
 /**
@@ -107,11 +137,16 @@ async function loadPortfolioSummary() {
  */
 async function loadFarms() {
     try {
-        // TODO: Replace with actual API call
-        // const farms = await dataFunctions.callFunction('get_farms', {});
+        if (typeof dataFunctions === 'undefined' || !dataFunctions.getFarms) {
+            console.error('dataFunctions.getFarms is not available');
+            return;
+        }
         
-        // Mock data
-        const farms = [
+        const farms = await dataFunctions.getFarms();
+        
+        if (!farms || farms.length === 0) {
+            // Fallback to mock data
+            const farms = [
             {
                 id: '1',
                 name: 'Applewood Farm',
@@ -172,14 +207,29 @@ async function loadFarms() {
                 workers: 74,
                 vehicles: 8
             }
-        ];
+            ];
+            adminData.farms = farms;
+        } else {
+            // Map database farms to display format
+            adminData.farms = farms.map(farm => ({
+                id: farm.id,
+                name: farm.name,
+                location: farm.location || 'Location not set',
+                region: farm.region || 'Region not set',
+                hectares: farm.hectares || 0,
+                crop_type: farm.crop_type || 'Not specified',
+                manager_name: 'Manager TBD', // TODO: Get from manager_id
+                status: farm.status || 'active',
+                workers: 0, // TODO: Count from workers table
+                vehicles: 0 // TODO: Count from vehicles table
+            }));
+        }
         
-        adminData.farms = farms;
-        renderFarmsList(farms);
-        renderCropDistribution(farms);
+        renderFarmsList(adminData.farms);
+        renderCropDistribution(adminData.farms);
         
         // Update farm selects in modals and forms
-        updateFarmSelects(farms);
+        updateFarmSelects(adminData.farms);
         
     } catch (error) {
         console.error('Error loading farms:', error);
@@ -300,11 +350,16 @@ function updateFarmSelects(farms) {
  */
 async function loadUsers() {
     try {
-        // TODO: Replace with actual API call
-        // const users = await dataFunctions.callFunction('get_system_users', {});
+        if (typeof dataFunctions === 'undefined' || !dataFunctions.getUsers) {
+            console.error('dataFunctions.getUsers is not available');
+            return;
+        }
         
-        // Mock data
-        const users = [
+        const users = await dataFunctions.getUsers();
+        
+        if (!users || users.length === 0) {
+            // Fallback to mock data
+            const users = [
             {
                 id: '1',
                 first_name: 'Admin',
@@ -332,11 +387,23 @@ async function loadUsers() {
                 farm_access: ['Citrus Valley'],
                 status: 'active'
             }
-        ];
+            ];
+            adminData.users = users;
+        } else {
+            // Map database users to display format
+            adminData.users = users.map(user => ({
+                id: user.id,
+                first_name: user.username || user.email?.split('@')[0] || 'User',
+                last_name: '',
+                email: user.email,
+                role: user.role || 'user',
+                farm_access: ['All Farms'], // TODO: Get from user_farm_access
+                status: user.is_active ? 'active' : 'inactive'
+            }));
+        }
         
-        adminData.users = users;
-        renderUsersTable(users);
-        updateUserStats(users);
+        renderUsersTable(adminData.users);
+        updateUserStats(adminData.users);
         
     } catch (error) {
         console.error('Error loading users:', error);
@@ -843,6 +910,42 @@ function viewVarieties(cropId) {
  * Show notification
  */
 function showNotification(message, type = 'info') {
+    if (typeof _common !== 'undefined') {
+        switch(type) {
+            case 'success':
+                _common.showSuccessToast(message);
+                break;
+            case 'error':
+                _common.showErrorToast(message);
+                break;
+            case 'warning':
+                _common.showWarningToast(message);
+                break;
+            default:
+                _common.showInfoToast(message);
+        }
+    } else if (typeof Swal !== 'undefined') {
+        const iconMap = {
+            'success': 'success',
+            'error': 'error',
+            'warning': 'warning',
+            'info': 'info'
+        };
+        
+        Swal.fire({
+            icon: iconMap[type] || 'info',
+            title: type.charAt(0).toUpperCase() + type.slice(1),
+            text: message,
+            timer: type === 'error' ? 5000 : 3000,
+            showConfirmButton: type === 'error',
+            toast: type !== 'error',
+            position: type === 'error' ? 'center' : 'top-end'
+        });
+    } else {
+        console.log(`[${type.toUpperCase()}]`, message);
+        alert(message);
+    }
+}
     console.log(`[${type.toUpperCase()}] ${message}`);
     // TODO: Implement proper toast notification
 }

@@ -16,20 +16,23 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <!-- Custom Styles -->
     <link href="styles.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
     
     <style>
-        :root {
-            --fruitlive-primary: #1a4d3e;
-            --fruitlive-secondary: #ff7948;
-            --fruitlive-accent: #7fa84f;
-            --fruitlive-light: #f8f9fa;
-            --fruitlive-gradient: linear-gradient(135deg, #1a4d3e 0%, #2a6d5e 100%);
-        }
-
+        /* Sign-in page specific styles - uses theme variables */
         body {
-            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 50%, #fff8e1 100%);
+            background: linear-gradient(135deg, 
+                rgba(var(--phoenix-primary-rgb), 0.05) 0%, 
+                rgba(var(--phoenix-success-rgb), 0.05) 50%, 
+                rgba(var(--phoenix-warning-rgb), 0.05) 100%);
             min-height: 100vh;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        [data-theme-mode="dark"] body {
+            background: linear-gradient(135deg, 
+                rgba(var(--phoenix-primary-rgb), 0.2) 0%, 
+                var(--phoenix-body-bg) 100%);
         }
 
         .auth-container {
@@ -38,16 +41,16 @@
         }
 
         .auth-card {
-            background: white;
+            background: var(--phoenix-card-bg);
             border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(26, 77, 62, 0.15);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 20px 60px rgba(var(--phoenix-primary-rgb), 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
         }
 
         .auth-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 25px 70px rgba(26, 77, 62, 0.2);
+            box-shadow: 0 25px 70px rgba(var(--phoenix-primary-rgb), 0.2);
         }
 
         .logo-container {
@@ -59,46 +62,51 @@
             height: auto;
             margin-bottom: 1rem;
             filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+            border-radius: 12px;
         }
 
         .brand-title {
             font-size: 2rem;
             font-weight: 700;
-            color: var(--fruitlive-primary);
+            color: var(--phoenix-primary);
             margin-bottom: 0.5rem;
             letter-spacing: -0.5px;
         }
 
         .brand-subtitle {
-            color: var(--fruitlive-accent);
+            color: var(--phoenix-success);
             font-size: 0.95rem;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .form-label {
-            color: var(--fruitlive-primary);
+        .signin-form-label {
+            color: var(--phoenix-primary);
             font-weight: 600;
             font-size: 0.9rem;
             margin-bottom: 0.5rem;
         }
 
-        .form-control {
-            border: 2px solid #e0e0e0;
+        .signin-form-control {
+            border: 2px solid var(--phoenix-border-color);
             border-radius: 12px;
             padding: 0.75rem 1rem;
             font-size: 0.95rem;
             transition: all 0.3s ease;
+            background-color: var(--phoenix-card-bg);
+            color: var(--phoenix-text-color);
         }
 
-        .form-control:focus {
-            border-color: var(--fruitlive-accent);
-            box-shadow: 0 0 0 4px rgba(127, 168, 79, 0.1);
+        .signin-form-control:focus {
+            border-color: var(--phoenix-primary);
+            box-shadow: 0 0 0 4px rgba(var(--phoenix-primary-rgb), 0.1);
+            background-color: var(--phoenix-card-bg);
+            color: var(--phoenix-text-color);
         }
 
-        .btn-primary {
-            background: var(--fruitlive-gradient);
+        .signin-btn-primary {
+            background: var(--theme-navbar-gradient);
             border: none;
             border-radius: 12px;
             padding: 0.85rem 1.5rem;
@@ -106,17 +114,19 @@
             font-size: 1rem;
             letter-spacing: 0.3px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(26, 77, 62, 0.3);
+            box-shadow: 0 4px 15px rgba(var(--phoenix-primary-rgb), 0.3);
+            color: white;
         }
 
-        .btn-primary:hover {
+        .signin-btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(26, 77, 62, 0.4);
-            background: linear-gradient(135deg, #153d31 0%, #1f5347 100%);
+            box-shadow: 0 6px 20px rgba(var(--phoenix-primary-rgb), 0.4);
+            filter: brightness(1.1);
+            color: white;
         }
 
         .btn-outline-secondary {
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--phoenix-border-color);
             border-radius: 12px;
             padding: 0.75rem 1.5rem;
             font-weight: 600;
@@ -124,9 +134,9 @@
         }
 
         .btn-outline-secondary:hover {
-            background: var(--fruitlive-light);
-            border-color: var(--fruitlive-accent);
-            color: var(--fruitlive-primary);
+            background: var(--phoenix-light);
+            border-color: var(--phoenix-primary);
+            color: var(--phoenix-primary);
         }
 
         .divider {
@@ -140,12 +150,12 @@
         .divider::after {
             content: '';
             flex: 1;
-            border-bottom: 2px solid #e8e8e8;
+            border-bottom: 2px solid var(--phoenix-border-color);
         }
 
         .divider span {
             padding: 0 1rem;
-            color: #999;
+            color: var(--phoenix-secondary);
             font-weight: 500;
             font-size: 0.85rem;
         }
@@ -157,28 +167,29 @@
         }
 
         a {
-            color: var(--fruitlive-accent);
+            color: var(--phoenix-primary);
             font-weight: 600;
             text-decoration: none;
             transition: color 0.3s ease;
         }
 
         a:hover {
-            color: var(--fruitlive-primary);
+            color: var(--theme-sidebar-active);
         }
 
         .form-check-input:checked {
-            background-color: var(--fruitlive-accent);
-            border-color: var(--fruitlive-accent);
+            background-color: var(--phoenix-primary);
+            border-color: var(--phoenix-primary);
         }
 
         .modal-content {
             border-radius: 20px;
             border: none;
+            background-color: var(--phoenix-card-bg);
         }
 
         .modal-header {
-            background: var(--fruitlive-gradient);
+            background: var(--theme-navbar-gradient);
             color: white;
             border-radius: 20px 20px 0 0;
             padding: 1.25rem 1.5rem;
@@ -189,7 +200,7 @@
         }
 
         .welcome-text {
-            color: #666;
+            color: var(--phoenix-secondary);
             font-size: 1rem;
             margin-bottom: 2rem;
         }
@@ -213,6 +224,34 @@
             padding: 3rem 2.5rem !important;
         }
 
+        /* Theme switcher for signin page */
+        .theme-toggle-signin {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+
+        .theme-toggle-btn {
+            background: var(--phoenix-card-bg);
+            border: 2px solid var(--phoenix-border-color);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: var(--phoenix-primary);
+        }
+
+        .theme-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
         @media (max-width: 576px) {
             .card-body {
                 padding: 2rem 1.5rem !important;
@@ -226,11 +265,46 @@
                 font-size: 1.5rem;
             }
         }
+
+        /* Theme dropdown styles for signin */
+        .theme-toggle-signin .dropdown-menu {
+            background-color: var(--phoenix-card-bg);
+            border: 1px solid var(--phoenix-border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+        }
+
+        .theme-toggle-signin .dropdown-item {
+            color: var(--phoenix-text-color);
+            border-radius: 8px;
+            margin: 0.25rem 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle-signin .dropdown-item:hover {
+            background-color: rgba(var(--phoenix-primary-rgb), 0.1);
+            color: var(--phoenix-primary);
+        }
+
+        .theme-toggle-btn.dropdown-toggle::after {
+            display: none;
+        }
     </style>
 
 </head>
 
 <body>
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle-signin dropdown">
+        <button class="theme-toggle-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Change Theme">
+            <i class="fas fa-palette"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" id="signinThemeMenu">
+            <!-- Theme options populated by JS -->
+        </ul>
+    </div>
+
     <div class="auth-container d-flex align-items-center justify-content-center">
         <div class="container">
             <div class="row justify-content-center">
@@ -266,27 +340,27 @@
                             <!-- Email/Password Form -->
                             <form id="signinForm">
                                 <div class="mb-3">
-                                    <label for="email" class="form-label">
+                                    <label for="email" class="signin-form-label">
                                         <i class="fas fa-envelope me-2"></i>Email Address
                                     </label>
-                                    <input type="email" class="form-control" id="email" name="email" 
+                                    <input type="email" class="form-control signin-form-control" id="email" name="email" 
                                            placeholder="you@example.com" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="password" class="form-label">
+                                    <label for="password" class="signin-form-label">
                                         <i class="fas fa-lock me-2"></i>Password
                                     </label>
-                                    <input type="password" class="form-control" id="password" name="password" 
+                                    <input type="password" class="form-control signin-form-control" id="password" name="password" 
                                            placeholder="Enter your password" required>
                                 </div>
                                 <div class="mb-4 form-check">
                                     <input type="checkbox" class="form-check-input" id="rememberMe">
-                                    <label class="form-check-label" for="rememberMe">
+                                    <label class="form-check-label" for="rememberMe" style="color: var(--phoenix-text-color);">
                                         Keep me signed in
                                     </label>
                                 </div>
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" class="btn signin-btn-primary">
                                         <i class="fas fa-sign-in-alt me-2"></i>
                                         Sign In to FruitLive
                                     </button>
@@ -337,38 +411,38 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="signupForm">
-                    <div class="modal-body">
+                    <div class="modal-body" style="color: var(--phoenix-text-color);">
                         <div class="mb-3">
-                            <label for="signupEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="signupEmail" name="email" required>
+                            <label for="signupEmail" class="signin-form-label">Email</label>
+                            <input type="email" class="form-control signin-form-control" id="signupEmail" name="email" required>
                         </div>
                         <div class="mb-3">
-                            <label for="signupPassword" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="signupPassword" name="password" required
+                            <label for="signupPassword" class="signin-form-label">Password</label>
+                            <input type="password" class="form-control signin-form-control" id="signupPassword" name="password" required
                                 minlength="8">
-                            <small class="text-muted">Must be at least 8 characters</small>
+                            <small style="color: var(--phoenix-secondary);">Must be at least 8 characters</small>
                         </div>
                         <div class="mb-3">
-                            <label for="signupConfirmPassword" class="form-label">Confirm Password</label>
-                            <input type="password" class="form-control" id="signupConfirmPassword"
+                            <label for="signupConfirmPassword" class="signin-form-label">Confirm Password</label>
+                            <input type="password" class="form-control signin-form-control" id="signupConfirmPassword"
                                 name="confirmPassword" required>
                         </div>
                         <div class="mb-3">
-                            <label for="signupFullName" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="signupFullName" name="fullName" required>
+                            <label for="signupFullName" class="signin-form-label">Full Name</label>
+                            <input type="text" class="form-control signin-form-control" id="signupFullName" name="fullName" required>
                         </div>
                         <div class="mb-3">
-                            <label for="signupFirstName" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="signupFirstName" name="firstName" required>
+                            <label for="signupFirstName" class="signin-form-label">First Name</label>
+                            <input type="text" class="form-control signin-form-control" id="signupFirstName" name="firstName" required>
                         </div>
                         <div class="mb-3">
-                            <label for="signupLastName" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="signupLastName" name="lastName" required>
+                            <label for="signupLastName" class="signin-form-label">Last Name</label>
+                            <input type="text" class="form-control signin-form-control" id="signupLastName" name="lastName" required>
                         </div>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer" style="background-color: var(--phoenix-light); border-color: var(--phoenix-border-color);">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Create Account</button>
+                        <button type="submit" class="btn signin-btn-primary">Create Account</button>
                     </div>
                 </form>
             </div>
@@ -385,6 +459,55 @@
 
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Theme Manager -->
+    <script src="js/themes.js"></script>
+
+    <script>
+        // Initialize theme menu for signin page
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeMenu = document.getElementById('signinThemeMenu');
+            if (themeMenu && typeof ThemeManager !== 'undefined') {
+                // Build theme options
+                Object.entries(ThemeManager.themes).forEach(([id, theme]) => {
+                    const item = document.createElement('li');
+                    item.innerHTML = `
+                        <a class="dropdown-item d-flex align-items-center py-2" href="#" data-theme="${id}">
+                            <i class="fas ${theme.icon} me-2" style="width: 20px;"></i>
+                            <span>${theme.name}</span>
+                        </a>
+                    `;
+                    themeMenu.appendChild(item);
+                });
+
+                // Add click handlers
+                themeMenu.querySelectorAll('[data-theme]').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const themeId = option.getAttribute('data-theme');
+                        ThemeManager.applyTheme(themeId);
+                        
+                        // Update button icon
+                        const theme = ThemeManager.themes[themeId];
+                        const btn = document.querySelector('.theme-toggle-btn i');
+                        if (btn && theme) {
+                            btn.className = `fas ${theme.icon}`;
+                        }
+                    });
+                });
+
+                // Set initial button icon
+                const currentTheme = ThemeManager.getCurrentTheme();
+                const theme = ThemeManager.themes[currentTheme];
+                if (theme) {
+                    const btn = document.querySelector('.theme-toggle-btn i');
+                    if (btn) {
+                        btn.className = `fas ${theme.icon}`;
+                    }
+                }
+            }
+        });
+    </script>
 
     <script>
         // Supabase configuration

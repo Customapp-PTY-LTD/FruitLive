@@ -58,12 +58,66 @@
 
 .grid-actions .btn {
     margin-right: 0.25rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.4rem 0.75rem;
     font-size: 0.875rem;
+    font-weight: 600;
+    border-width: 2px;
+    transition: all 0.2s ease;
 }
 
 .grid-actions .btn:last-child {
     margin-right: 0;
+}
+
+/* Action Buttons - Enhanced Visibility */
+.btn-sm {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    font-weight: 600;
+    min-width: 36px;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-primary,
+.btn-outline-info,
+.btn-outline-secondary,
+.btn-outline-success,
+.btn-outline-danger {
+    border-width: 2px;
+    font-weight: 600;
+    padding: 0.4rem 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-primary {
+    border-color: var(--phoenix-primary);
+    color: var(--phoenix-primary);
+    background-color: rgba(var(--phoenix-primary-rgb), 0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--phoenix-primary);
+    border-color: var(--phoenix-primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(var(--phoenix-primary-rgb), 0.3);
+}
+
+.btn-outline-info:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(13, 202, 240, 0.3);
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+.btn-sm i {
+    font-size: 1rem;
+    line-height: 1;
 }
 
 /* Search and filters */

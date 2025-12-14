@@ -3,7 +3,17 @@
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="fw-bold">Dashboard Overview</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="fw-bold mb-0">Dashboard Overview</h2>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <label class="form-label mb-0 fw-semibold" for="farmSelector">Farm:</label>
+                    <select class="form-select form-select-sm" id="farmSelector" style="min-width: 250px;">
+                        <option value="">Loading farms...</option>
+                    </select>
+                </div>
+            </div>
             <p class="text-muted" id="dashboardDate">
                 <span id="currentDate"></span> | 
                 <span id="farmLocation"></span> | 
@@ -37,7 +47,7 @@
     <div class="row">
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-clock-history me-2"></i>Recent Activity
                     </h5>
@@ -55,7 +65,7 @@
 
         <div class="col-lg-4">
             <div class="card">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-calendar-event me-2"></i>Upcoming Tasks
                     </h5>

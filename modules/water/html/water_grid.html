@@ -7,12 +7,29 @@
             <p class="text-muted">Water Usage, Pump Meters & License Compliance</p>
         </div>
         <div class="col-md-6 text-end">
-            <button class="btn btn-primary me-2">
+            <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#editReadingModal" onclick="document.getElementById('editReadingId').value = ''">
                 <i class="bi bi-plus-lg me-1"></i>Record Meter Reading
+            </button>
+            <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editLicenseModal" onclick="document.getElementById('editLicenseId').value = ''">
+                <i class="bi bi-plus-lg me-1"></i>Add Water License
             </button>
             <button class="btn btn-outline-secondary">
                 <i class="bi bi-download me-1"></i>Export Water Report
             </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Farm</label>
+                    <select class="form-select" id="farmFilter">
+                        <option value="all">All Farms</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -81,7 +98,9 @@
         <div class="tab-pane fade show active" id="pumps">
             <div class="card">
                 <div class="card-body">
-                    <p class="text-muted">Pump meter management coming soon...</p>
+                    <div id="pumpReadingsList">
+                        <p class="text-muted">Loading pump readings...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -102,10 +121,107 @@
         <div class="tab-pane fade" id="compliance">
             <div class="card">
                 <div class="card-body">
-                    <p class="text-muted">Water license compliance coming soon...</p>
+                    <div id="waterLicensesList">
+                        <p class="text-muted">Loading water licenses...</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Edit Pump Reading Modal -->
+    <div class="modal fade" id="editReadingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add/Edit Pump Reading</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editReadingId" value="">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Reading Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editReadingDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Pump Location <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editPumpLocation" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Meter Reading (m³)</label>
+                            <input type="number" class="form-control" id="editMeterReading" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Previous Reading (m³)</label>
+                            <input type="number" class="form-control" id="editPreviousReading" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Usage (m³)</label>
+                            <input type="number" class="form-control" id="editUsageM3" step="0.01" min="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="savePumpReading()">Save Reading</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Water License Modal -->
+    <div class="modal fade" id="editLicenseModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add/Edit Water License</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editLicenseId" value="">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">License Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editLicenseNumber" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">License Type</label>
+                            <input type="text" class="form-control" id="editLicenseType">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Issued Date</label>
+                            <input type="date" class="form-control" id="editLicenseIssued">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" id="editLicenseExpiry">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Annual Allocation (m³)</label>
+                            <input type="number" class="form-control" id="editLicenseAllocation" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Issuing Authority</label>
+                            <input type="text" class="form-control" id="editLicenseAuthority">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editLicenseStatus">
+                                <option value="active">Active</option>
+                                <option value="expired">Expired</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveWaterLicense()">Save License</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 

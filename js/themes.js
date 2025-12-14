@@ -349,7 +349,7 @@ const ThemeManager = {
     },
 
     // Default theme
-    defaultTheme: 'orchard-green',
+    defaultTheme: 'irrigation-blue',
 
     // Storage key
     storageKey: 'fruitlive_theme',

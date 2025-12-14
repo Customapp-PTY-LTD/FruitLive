@@ -20,16 +20,58 @@ let labourData = {
 /**
  * Initialize Labour Module
  */
-function initializeLabourGrid() {
-    console.log('Initializing Labour Allocation Module...');
-    
-    // Set current date
-    setCurrentDate();
-    
-    // Load data
-    loadLabourData();
-    loadSummaryStats();
-    loadWorkersList();
+async function initializeLabourGrid() {
+    try {
+        console.log('Initializing Labour Allocation Module...');
+        
+        // Set current date
+        setCurrentDate();
+        
+        // Check if utility functions are available
+        if (typeof populateFarmSelector === 'undefined') {
+            console.error('populateFarmSelector is not defined. Make sure farm-selector-utils.js is loaded.');
+            return;
+        }
+        
+        // Load and populate farm and block selectors
+        try {
+            await populateFarmSelector('farmFilter', localStorage.getItem('selectedFarmId') || 'all', true);
+            await populateBlockSelector('blockFilter', null, null, true);
+            
+            // Setup farm selector to update block selector when changed
+            if (typeof setupFarmSelectorWithBlocks === 'function') {
+                setupFarmSelectorWithBlocks('farmFilter', 'blockFilter', (farmId) => {
+                    // Reload data when farm changes
+                    loadLabourData().then(() => {
+                        loadSummaryStats();
+                    }).catch(err => {
+                        console.error('Error reloading data after farm change:', err);
+                    });
+                });
+            }
+        } catch (error) {
+            console.error('Error setting up farm/block selectors:', error);
+            // Continue anyway - data loading might still work
+        }
+        
+        // Load data (async)
+        await loadLabourData();
+        loadSummaryStats();
+    } catch (error) {
+        console.error('Error initializing Labour Grid:', error);
+        // Show user-friendly error message
+        const container = document.querySelector('.labour-container');
+        if (container) {
+            container.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Error Loading Labour Module</h4>
+                    <p>There was an error initializing the labour allocation module. Please refresh the page.</p>
+                    <hr>
+                    <p class="mb-0"><small>Error: ${error.message}</small></p>
+                </div>
+            `;
+        }
+    }
 }
 
 /**
@@ -56,10 +98,62 @@ function setCurrentDate() {
  */
 async function loadLabourData() {
     try {
-        // TODO: Replace with actual API call
-        // const data = await dataFunctions.getLabourAllocations();
+        // Check if dataFunctions is available
+        if (typeof dataFunctions === 'undefined' || !dataFunctions.getWorkers) {
+            console.error('dataFunctions.getWorkers is not available');
+            throw new Error('Data functions not available');
+        }
         
-        // Mock data
+        // Load workers and allocations with filters
+        const farmId = localStorage.getItem('selectedFarmId') || 'all';
+        const filters = farmId !== 'all' ? { farmId: farmId } : {};
+        
+        const [workers, allocations] = await Promise.all([
+            dataFunctions.getWorkers(filters).catch(err => {
+                console.error('Error loading workers:', err);
+                return [];
+            }),
+            dataFunctions.getWorkerAllocations(filters).catch(err => {
+                console.error('Error loading allocations:', err);
+                return [];
+            })
+        ]);
+        
+        // Map workers with their allocations
+        if (workers && Array.isArray(workers)) {
+            labourData.workers = workers.map(worker => {
+                // Find today's allocation for this worker
+                const today = new Date().toISOString().split('T')[0];
+                const todayAllocation = allocations && Array.isArray(allocations) 
+                    ? allocations.find(a => a.worker_id === worker.id && a.allocation_date === today)
+                    : null;
+                
+                return {
+                    id: worker.id,
+                    name: `${worker.first_name} ${worker.last_name}`,
+                    idNumber: worker.id_number || 'N/A',
+                    status: todayAllocation ? 'Present' : 'Unallocated',
+                    farm: 'Quinn Farms', // TODO: Get from farm_id
+                    block: todayAllocation ? 'Block ' + (todayAllocation.block_id ? todayAllocation.block_id.substring(0, 8) : 'N/A') : '-',
+                    variety: todayAllocation ? 'Variety' : '-',
+                    task: todayAllocation?.task_type || '-',
+                    rowStart: null,
+                    rowEnd: null,
+                    teamLeader: todayAllocation?.induna_id ? 'Supervisor' : '-',
+                    employeeNumber: worker.employee_number,
+                    hourlyRate: worker.hourly_rate
+                };
+            });
+        } else {
+            labourData.workers = [];
+        }
+        
+        labourData.filteredWorkers = [...labourData.workers];
+        loadWorkersList();
+        
+    } catch (error) {
+        console.error('Error loading labour data:', error);
+        // Fallback to mock data
         labourData.workers = [
             {
                 id: 1,
@@ -73,40 +167,10 @@ async function loadLabourData() {
                 rowStart: 12,
                 rowEnd: 15,
                 teamLeader: 'James'
-            },
-            {
-                id: 2,
-                name: 'Mary Johnson',
-                idNumber: '8907123456789',
-                status: 'Present',
-                farm: 'North Block',
-                block: 'Block B1',
-                variety: 'Golden Delicious',
-                task: 'Weeding',
-                rowStart: 8,
-                rowEnd: 11,
-                teamLeader: 'Peter'
-            },
-            {
-                id: 3,
-                name: 'David Williams',
-                idNumber: '7503289012345',
-                status: 'Absent',
-                farm: '-',
-                block: '-',
-                variety: '-',
-                task: '-',
-                rowStart: null,
-                rowEnd: null,
-                teamLeader: '-'
             }
         ];
-        
         labourData.filteredWorkers = [...labourData.workers];
-        
-    } catch (error) {
-        console.error('Error loading labour data:', error);
-        showErrorMessage('Failed to load labour data');
+        loadWorkersList();
     }
 }
 
@@ -198,7 +262,7 @@ function loadWorkersList() {
                 <td>${worker.teamLeader}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary" 
-                            onclick="editWorkerAllocation(${worker.id})"
+                            onclick="editWorkerAllocation('${worker.id}')"
                             ${isAbsent ? 'disabled' : ''}>
                         <i class="bi bi-pencil"></i>
                     </button>
@@ -354,59 +418,92 @@ function changePage(page) {
  * Edit worker allocation
  */
 function editWorkerAllocation(workerId) {
-    const worker = labourData.workers.find(w => w.id === workerId);
-    if (!worker) return;
+    const worker = labourData.workers.find(w => String(w.id) === String(workerId));
+    if (!worker) {
+        console.error('Worker not found:', workerId);
+        return;
+    }
     
     // Populate modal
-    document.getElementById('editWorkerId').value = worker.id;
-    document.getElementById('editWorkerName').value = worker.name;
-    document.getElementById('editFarm').value = worker.farm;
-    document.getElementById('editBlock').value = worker.block;
-    document.getElementById('editVariety').value = worker.variety;
-    document.getElementById('editTask').value = worker.task;
-    document.getElementById('editRowStart').value = worker.rowStart || '';
-    document.getElementById('editRowEnd').value = worker.rowEnd || '';
+    const editWorkerIdEl = document.getElementById('editWorkerId');
+    const editWorkerNameEl = document.getElementById('editWorkerName');
+    const editFarmEl = document.getElementById('editFarm');
+    const editBlockEl = document.getElementById('editBlock');
+    const editVarietyEl = document.getElementById('editVariety');
+    const editTaskEl = document.getElementById('editTask');
+    const editRowStartEl = document.getElementById('editRowStart');
+    const editRowEndEl = document.getElementById('editRowEnd');
+    
+    if (editWorkerIdEl) editWorkerIdEl.value = worker.id;
+    if (editWorkerNameEl) editWorkerNameEl.value = worker.name;
+    if (editFarmEl) editFarmEl.value = worker.farm;
+    if (editBlockEl) editBlockEl.value = worker.block;
+    if (editVarietyEl) editVarietyEl.value = worker.variety;
+    if (editTaskEl) editTaskEl.value = worker.task;
+    if (editRowStartEl) editRowStartEl.value = worker.rowStart || '';
+    if (editRowEndEl) editRowEndEl.value = worker.rowEnd || '';
     
     // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('editAllocationModal'));
-    modal.show();
+    const modalElement = document.getElementById('editAllocationModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    }
 }
 
 /**
  * Save allocation
  */
 async function saveAllocation() {
-    const workerId = parseInt(document.getElementById('editWorkerId').value);
-    const farm = document.getElementById('editFarm').value;
-    const block = document.getElementById('editBlock').value;
-    const variety = document.getElementById('editVariety').value;
-    const task = document.getElementById('editTask').value;
-    const rowStart = parseInt(document.getElementById('editRowStart').value);
-    const rowEnd = parseInt(document.getElementById('editRowEnd').value);
-    
-    // TODO: Save to database
-    console.log('Saving allocation:', { workerId, farm, block, variety, task, rowStart, rowEnd });
-    
-    // Update local data
-    const worker = labourData.workers.find(w => w.id === workerId);
-    if (worker) {
-        worker.farm = farm;
-        worker.block = block;
-        worker.variety = variety;
-        worker.task = task;
-        worker.rowStart = rowStart;
-        worker.rowEnd = rowEnd;
+    try {
+        const workerId = document.getElementById('editWorkerId').value;
+        const allocationId = document.getElementById('editAllocationId').value;
+        const farmId = document.getElementById('editFarm').value;
+        const blockId = document.getElementById('editBlock').value;
+        const taskType = document.getElementById('editTask').value;
+        const startTime = document.getElementById('editStartTime')?.value || '07:00';
+        const endTime = document.getElementById('editEndTime')?.value || '16:00';
+        
+        if (!workerId || !farmId) {
+            showErrorMessage('Worker and Farm are required');
+            return;
+        }
+        
+        const allocationData = {
+            worker_id: workerId,
+            farm_id: farmId,
+            block_id: blockId || null,
+            task_type: taskType || null,
+            start_time: startTime,
+            end_time: endTime,
+            status: 'planned'
+        };
+        
+        let result;
+        if (allocationId) {
+            // Update existing allocation
+            result = await dataFunctions.updateWorkerAllocation(allocationId, allocationData);
+            showSuccessMessage('Allocation updated successfully');
+        } else {
+            // Create new allocation
+            const allocationDate = document.getElementById('editAllocationDate')?.value || new Date().toISOString().split('T')[0];
+            allocationData.allocation_date = allocationDate;
+            result = await dataFunctions.createWorkerAllocation(allocationData);
+            showSuccessMessage('Allocation created successfully');
+        }
+        
+        // Reload data
+        await loadLabourData();
+        loadSummaryStats();
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editAllocationModal'));
+        if (modal) modal.hide();
+        
+    } catch (error) {
+        console.error('Error saving allocation:', error);
+        showErrorMessage('Failed to save allocation: ' + error.message);
     }
-    
-    // Refresh display
-    filterWorkers();
-    loadWorkersList();
-    
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('editAllocationModal'));
-    if (modal) modal.hide();
-    
-    showSuccessMessage('Allocation updated successfully');
 }
 
 /**
@@ -446,24 +543,64 @@ function printSummary() {
  * Show success message
  */
 function showSuccessMessage(message) {
-    console.log('Success:', message);
-    // TODO: Implement proper notification
+    if (typeof _common !== 'undefined' && _common.showSuccessToast) {
+        _common.showSuccessToast(message);
+    } else if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+            timer: 3000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    } else {
+        console.log('Success:', message);
+        alert(message);
+    }
 }
 
 /**
  * Show error message
  */
 function showErrorMessage(message) {
-    console.error('Error:', message);
-    // TODO: Implement proper notification
+    if (typeof _common !== 'undefined' && _common.showErrorToast) {
+        _common.showErrorToast(message);
+    } else if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message,
+            timer: 5000,
+            showConfirmButton: true
+        });
+    } else {
+        console.error('Error:', message);
+        alert('Error: ' + message);
+    }
 }
 
 /**
  * Show info message
  */
 function showInfoMessage(message) {
-    console.log('Info:', message);
-    // TODO: Implement proper notification
+    if (typeof _common !== 'undefined' && _common.showInfoToast) {
+        _common.showInfoToast(message);
+    } else if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info',
+            title: 'Info',
+            text: message,
+            timer: 3000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    } else {
+        console.log('Info:', message);
+        alert(message);
+    }
 }
 
 // Auto-initialize when loaded via router

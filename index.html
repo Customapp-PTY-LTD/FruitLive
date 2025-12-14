@@ -63,7 +63,7 @@
                                     <i class="fas fa-user"></i>
                                 </div>
                             </div>
-                            <span>Demo User</span>
+                            <span id="userDisplayName">Loading...</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li class="dropdown-header">
@@ -75,8 +75,8 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="fw-bold">Demo User</div>
-                                        <small class="text-muted">Administrator</small>
+                                        <div class="fw-bold" id="userDisplayNameDropdown">Loading...</div>
+                                        <small class="text-muted" id="userRoleDisplay">Administrator</small>
                                     </div>
                                 </div>
                             </li>
@@ -318,6 +318,8 @@
 
     <!-- Application Scripts -->
     <script src="js/themes.js"></script>
+    <script src="test-crud-functions.js"></script>
+    <script src="test-data-generator.js"></script>
     <script src="js/data-functions.js"></script>
     <script src="js/auth-service.js"></script>
     <script src="js/common.js"></script>
@@ -348,7 +350,68 @@
 
             // Initialize sidebar toggle
             initializeSidebarToggle();
+
+            // Load and display user information
+            updateUserDisplay();
         });
+
+        /**
+         * Update user display in navbar
+         */
+        function updateUserDisplay() {
+            try {
+                const userInfoStr = localStorage.getItem('user_info');
+                if (!userInfoStr) {
+                    console.warn('No user info found in localStorage');
+                    updateUserNameDisplay('User');
+                    return;
+                }
+
+                const user = JSON.parse(userInfoStr);
+                
+                // Determine display name (prefer full_name, then first_name + last_name, then email, then username)
+                let displayName = 'User';
+                if (user.full_name) {
+                    displayName = user.full_name;
+                } else if (user.first_name || user.last_name) {
+                    displayName = [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
+                    if (!displayName) displayName = 'User';
+                } else if (user.email) {
+                    displayName = user.email.split('@')[0]; // Use email username part
+                } else if (user.username) {
+                    displayName = user.username;
+                }
+
+                // Update navbar display name
+                updateUserNameDisplay(displayName);
+
+                // Update role display
+                const roleDisplay = document.getElementById('userRoleDisplay');
+                if (roleDisplay) {
+                    const roleName = user.role_name || user.role || 'User';
+                    roleDisplay.textContent = roleName;
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                updateUserNameDisplay('User');
+            }
+        }
+
+        /**
+         * Update user name display in navbar and dropdown
+         */
+        function updateUserNameDisplay(name) {
+            const displayNameSpan = document.getElementById('userDisplayName');
+            const dropdownNameDiv = document.getElementById('userDisplayNameDropdown');
+            
+            if (displayNameSpan) {
+                displayNameSpan.textContent = name;
+            }
+            
+            if (dropdownNameDiv) {
+                dropdownNameDiv.textContent = name;
+            }
+        }
 
         // Initialize sidebar collapse behavior
         function initializeSidebarCollapse() {
