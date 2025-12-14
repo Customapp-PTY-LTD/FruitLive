@@ -91,6 +91,11 @@
     filter: brightness(1.1);
 }
 
+.quick-action:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--phoenix-primary-rgb), 0.2);
+}
+
 .quick-action i {
     display: block;
 }

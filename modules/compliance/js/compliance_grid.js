@@ -9,6 +9,21 @@ async function initializeComplianceGrid() {
     try {
         console.log('Compliance Grid initialized');
         
+        // Wait for dataFunctions to be available
+        if (typeof waitForDataFunctions === 'function') {
+            try {
+                await waitForDataFunctions(50, 100);
+            } catch (error) {
+                console.error('dataFunctions not available:', error);
+                throw new Error('Data functions not available');
+            }
+        } else if (typeof dataFunctions === 'undefined') {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (typeof dataFunctions === 'undefined') {
+                throw new Error('dataFunctions is not available');
+            }
+        }
+        
         // Check if utility functions are available
         if (typeof populateFarmSelector === 'undefined') {
             console.error('populateFarmSelector is not defined. Make sure farm-selector-utils.js is loaded.');

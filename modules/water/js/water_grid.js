@@ -8,6 +8,21 @@ async function initializeWaterGrid() {
     try {
         console.log('Water Grid initialized');
         
+        // Wait for dataFunctions to be available
+        if (typeof waitForDataFunctions === 'function') {
+            try {
+                await waitForDataFunctions(50, 100);
+            } catch (error) {
+                console.error('dataFunctions not available:', error);
+                throw new Error('Data functions not available');
+            }
+        } else if (typeof dataFunctions === 'undefined') {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (typeof dataFunctions === 'undefined') {
+                throw new Error('dataFunctions is not available');
+            }
+        }
+        
         // Check if utility functions are available
         if (typeof populateFarmSelector === 'undefined') {
             console.error('populateFarmSelector is not defined. Make sure farm-selector-utils.js is loaded.');
@@ -22,8 +37,12 @@ async function initializeWaterGrid() {
             const farmSelector = document.getElementById('farmFilter');
             if (farmSelector) {
                 farmSelector.addEventListener('change', () => {
-                    loadPumpReadings().catch(err => console.error('Error loading readings:', err));
-                    loadWaterLicenses().catch(err => console.error('Error loading licenses:', err));
+                    Promise.all([
+                        loadPumpReadings().catch(err => console.error('Error loading readings:', err)),
+                        loadWaterLicenses().catch(err => console.error('Error loading licenses:', err))
+                    ]).then(() => {
+                        updateWaterSummaryCards();
+                    });
                 });
             }
         } catch (error) {
@@ -32,8 +51,71 @@ async function initializeWaterGrid() {
         
         await loadPumpReadings();
         await loadWaterLicenses();
+        updateWaterSummaryCards();
     } catch (error) {
         console.error('Error initializing Water Grid:', error);
+    }
+}
+
+/**
+ * Update summary cards with calculated values
+ */
+function updateWaterSummaryCards() {
+    try {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        // Calculate water used this month
+        const monthlyUsage = waterData.pumpReadings
+            .filter(reading => {
+                const readingDate = new Date(reading.reading_date);
+                return readingDate >= startOfMonth;
+            })
+            .reduce((sum, reading) => sum + (parseFloat(reading.usage_m3) || 0), 0);
+        
+        // Count active pumps (unique pump locations)
+        const activePumps = new Set(waterData.pumpReadings.map(r => r.pump_location).filter(Boolean)).size;
+        
+        // Calculate license remaining (total allocation - total usage)
+        const totalAllocation = waterData.licenses
+            .filter(license => license.status === 'active')
+            .reduce((sum, license) => sum + (parseFloat(license.annual_allocation_m3 || license.allocation_m3) || 0), 0);
+        
+        const totalUsage = waterData.pumpReadings
+            .reduce((sum, reading) => sum + (parseFloat(reading.usage_m3) || 0), 0);
+        
+        const licenseRemaining = Math.max(0, totalAllocation - totalUsage);
+        
+        // Estimate cost (simplified: assume R2.50 per m³)
+        const estimatedCost = monthlyUsage * 2.5;
+        
+        // Update DOM elements
+        const waterUsedEl = document.querySelector('#waterUsedThisMonth');
+        if (waterUsedEl) {
+            waterUsedEl.textContent = monthlyUsage.toLocaleString('en-ZA', {maximumFractionDigits: 0}) + ' m³';
+        }
+        
+        const activePumpsEl = document.querySelector('#activePumpsCount');
+        if (activePumpsEl) {
+            activePumpsEl.textContent = activePumps.toString();
+        }
+        
+        const licenseRemainingEl = document.querySelector('#licenseRemaining');
+        if (licenseRemainingEl) {
+            licenseRemainingEl.textContent = licenseRemaining.toLocaleString('en-ZA', {maximumFractionDigits: 0}) + ' m³';
+        }
+        
+        const totalAllocationEl = document.querySelector('#totalAllocation');
+        if (totalAllocationEl) {
+            totalAllocationEl.textContent = `annual allocation: ${totalAllocation.toLocaleString('en-ZA', {maximumFractionDigits: 0})} m³`;
+        }
+        
+        const waterCostEl = document.querySelector('#waterCostThisMonth');
+        if (waterCostEl) {
+            waterCostEl.textContent = 'R' + estimatedCost.toLocaleString('en-ZA', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        }
+    } catch (error) {
+        console.error('Error updating water summary cards:', error);
     }
 }
 
@@ -48,17 +130,38 @@ async function loadPumpReadings() {
         
         const farmId = localStorage.getItem('selectedFarmId') || 'all';
         const filters = farmId !== 'all' ? { farmId: farmId } : {};
-        const readings = await dataFunctions.getPumpReadings(filters);
+        const readingsResponse = await dataFunctions.getPumpReadings(filters);
+        console.log('Water - Pump readings response:', readingsResponse);
+        
+        // Handle different response structures
+        let readings = readingsResponse;
+        if (readingsResponse && !Array.isArray(readingsResponse)) {
+            if (readingsResponse.readings && Array.isArray(readingsResponse.readings)) {
+                readings = readingsResponse.readings;
+            } else if (readingsResponse.data && Array.isArray(readingsResponse.data)) {
+                readings = readingsResponse.data;
+            } else if (readingsResponse.result && Array.isArray(readingsResponse.result)) {
+                readings = readingsResponse.result;
+            } else {
+                console.warn('Water - Readings response is not in expected format:', readingsResponse);
+                readings = [];
+            }
+        }
+        
         if (readings && Array.isArray(readings)) {
             waterData.pumpReadings = readings;
+            console.log('Water - Loaded pump readings:', readings.length);
         } else {
             waterData.pumpReadings = [];
+            console.log('Water - No pump readings found');
         }
         renderPumpReadings();
+        updateWaterSummaryCards();
     } catch (error) {
         console.error('Error loading pump readings:', error);
         waterData.pumpReadings = [];
         renderPumpReadings();
+        updateWaterSummaryCards();
     }
 }
 
@@ -73,17 +176,38 @@ async function loadWaterLicenses() {
         
         const farmId = localStorage.getItem('selectedFarmId') || 'all';
         const filters = farmId !== 'all' ? { farmId: farmId } : {};
-        const licenses = await dataFunctions.getWaterLicenses(filters);
+        const licensesResponse = await dataFunctions.getWaterLicenses(filters);
+        console.log('Water - Licenses response:', licensesResponse);
+        
+        // Handle different response structures
+        let licenses = licensesResponse;
+        if (licensesResponse && !Array.isArray(licensesResponse)) {
+            if (licensesResponse.licenses && Array.isArray(licensesResponse.licenses)) {
+                licenses = licensesResponse.licenses;
+            } else if (licensesResponse.data && Array.isArray(licensesResponse.data)) {
+                licenses = licensesResponse.data;
+            } else if (licensesResponse.result && Array.isArray(licensesResponse.result)) {
+                licenses = licensesResponse.result;
+            } else {
+                console.warn('Water - Licenses response is not in expected format:', licensesResponse);
+                licenses = [];
+            }
+        }
+        
         if (licenses && Array.isArray(licenses)) {
             waterData.licenses = licenses;
+            console.log('Water - Loaded licenses:', licenses.length);
         } else {
             waterData.licenses = [];
+            console.log('Water - No licenses found');
         }
         renderWaterLicenses();
+        updateWaterSummaryCards();
     } catch (error) {
         console.error('Error loading water licenses:', error);
         waterData.licenses = [];
         renderWaterLicenses();
+        updateWaterSummaryCards();
     }
 }
 

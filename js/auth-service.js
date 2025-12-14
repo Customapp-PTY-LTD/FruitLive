@@ -1,5 +1,5 @@
 /**
- * Authentication Service for Hope Diamond Transport
+ * Authentication Service for FruitLive
  * Integrates with Lambda Proxy for Google OAuth and RBAC
  */
 

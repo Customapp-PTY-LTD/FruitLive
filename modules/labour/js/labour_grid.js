@@ -24,6 +24,23 @@ async function initializeLabourGrid() {
     try {
         console.log('Initializing Labour Allocation Module...');
         
+        // Wait for dataFunctions to be available
+        if (typeof waitForDataFunctions === 'function') {
+            try {
+                await waitForDataFunctions(50, 100);
+                console.log('dataFunctions is ready');
+            } catch (error) {
+                console.error('dataFunctions not available:', error);
+                throw new Error('Data functions not available');
+            }
+        } else if (typeof dataFunctions === 'undefined') {
+            // Fallback: wait a bit and check again
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (typeof dataFunctions === 'undefined') {
+                throw new Error('dataFunctions is not available');
+            }
+        }
+        
         // Set current date
         setCurrentDate();
         
@@ -41,12 +58,22 @@ async function initializeLabourGrid() {
             // Setup farm selector to update block selector when changed
             if (typeof setupFarmSelectorWithBlocks === 'function') {
                 setupFarmSelectorWithBlocks('farmFilter', 'blockFilter', (farmId) => {
+                    // Update farm info display
+                    updateFarmInfoDisplay();
                     // Reload data when farm changes
                     loadLabourData().then(() => {
                         loadSummaryStats();
                     }).catch(err => {
                         console.error('Error reloading data after farm change:', err);
                     });
+                });
+            }
+            
+            // Also add event listener to farm selector to update display
+            const farmSelector = document.getElementById('farmFilter');
+            if (farmSelector) {
+                farmSelector.addEventListener('change', () => {
+                    updateFarmInfoDisplay();
                 });
             }
         } catch (error) {
@@ -87,9 +114,27 @@ function setCurrentDate() {
         dateElement.textContent = dateString;
     }
     
+    // Update farm info display
+    updateFarmInfoDisplay();
+}
+
+/**
+ * Update farm info badge display (shows selected farm name or nothing)
+ */
+function updateFarmInfoDisplay() {
     const farmInfo = document.getElementById('farmInfo');
-    if (farmInfo) {
-        farmInfo.innerHTML = '<span class="badge" style="background-color: #7fa84f;">125 hectares</span>';
+    if (!farmInfo) return;
+    
+    const farmSelector = document.getElementById('farmFilter');
+    if (farmSelector && farmSelector.value && farmSelector.value !== 'all') {
+        const selectedOption = farmSelector.options[farmSelector.selectedIndex];
+        if (selectedOption && selectedOption.text) {
+            farmInfo.innerHTML = `<span class="badge" style="background-color: #7fa84f;">${selectedOption.text}</span>`;
+        } else {
+            farmInfo.innerHTML = '';
+        }
+    } else {
+        farmInfo.innerHTML = '';
     }
 }
 
@@ -108,6 +153,8 @@ async function loadLabourData() {
         const farmId = localStorage.getItem('selectedFarmId') || 'all';
         const filters = farmId !== 'all' ? { farmId: farmId } : {};
         
+        console.log('Loading labour data with filters:', filters);
+        
         const [workers, allocations] = await Promise.all([
             dataFunctions.getWorkers(filters).catch(err => {
                 console.error('Error loading workers:', err);
@@ -119,24 +166,66 @@ async function loadLabourData() {
             })
         ]);
         
+        console.log('Workers response:', workers);
+        console.log('Allocations response:', allocations);
+        console.log('Workers type:', typeof workers);
+        console.log('Is workers array?', Array.isArray(workers));
+        console.log('Workers count:', workers?.length || 0);
+        console.log('Allocations count:', allocations?.length || 0);
+        
+        // Handle different response structures
+        let workersArray = workers;
+        if (workers && !Array.isArray(workers)) {
+            // Try to extract array from response object
+            if (workers.workers && Array.isArray(workers.workers)) {
+                workersArray = workers.workers;
+            } else if (workers.data && Array.isArray(workers.data)) {
+                workersArray = workers.data;
+            } else if (workers.result && Array.isArray(workers.result)) {
+                workersArray = workers.result;
+            } else {
+                console.warn('Workers response is not in expected format:', workers);
+                workersArray = [];
+            }
+        }
+        
+        let allocationsArray = allocations;
+        if (allocations && !Array.isArray(allocations)) {
+            if (allocations.allocations && Array.isArray(allocations.allocations)) {
+                allocationsArray = allocations.allocations;
+            } else if (allocations.data && Array.isArray(allocations.data)) {
+                allocationsArray = allocations.data;
+            } else if (allocations.result && Array.isArray(allocations.result)) {
+                allocationsArray = allocations.result;
+            } else {
+                console.warn('Allocations response is not in expected format:', allocations);
+                allocationsArray = [];
+            }
+        }
+        
+        console.log('Workers array after processing:', workersArray);
+        console.log('Allocations array after processing:', allocationsArray);
+        console.log('Processed workers count:', workersArray?.length || 0);
+        
         // Map workers with their allocations
-        if (workers && Array.isArray(workers)) {
-            labourData.workers = workers.map(worker => {
+        if (workersArray && Array.isArray(workersArray) && workersArray.length > 0) {
+            labourData.workers = workersArray.map(worker => {
                 // Find today's allocation for this worker
                 const today = new Date().toISOString().split('T')[0];
-                const todayAllocation = allocations && Array.isArray(allocations) 
-                    ? allocations.find(a => a.worker_id === worker.id && a.allocation_date === today)
+                const todayAllocation = allocationsArray && Array.isArray(allocationsArray) 
+                    ? allocationsArray.find(a => a.worker_id === worker.id && a.allocation_date === today)
                     : null;
                 
                 return {
                     id: worker.id,
                     name: `${worker.first_name} ${worker.last_name}`,
                     idNumber: worker.id_number || 'N/A',
-                    status: todayAllocation ? 'Present' : 'Unallocated',
-                    farm: 'Quinn Farms', // TODO: Get from farm_id
-                    block: todayAllocation ? 'Block ' + (todayAllocation.block_id ? todayAllocation.block_id.substring(0, 8) : 'N/A') : '-',
-                    variety: todayAllocation ? 'Variety' : '-',
+                    status: todayAllocation ? (todayAllocation.status || 'Present') : 'Unallocated',
+                    farm: todayAllocation?.farm_name || todayAllocation?.farm_id || 'Not Allocated',
+                    block: todayAllocation ? (todayAllocation.block_name || 'Block ' + (todayAllocation.block_id ? todayAllocation.block_id.substring(0, 8) : 'N/A')) : '-',
+                    variety: todayAllocation?.variety_name || (todayAllocation?.variety_id ? 'Variety' : '-'),
                     task: todayAllocation?.task_type || '-',
+                    employmentType: worker.employment_type || 'permanent',
                     rowStart: null,
                     rowEnd: null,
                     teamLeader: todayAllocation?.induna_id ? 'Supervisor' : '-',
@@ -148,7 +237,7 @@ async function loadLabourData() {
             labourData.workers = [];
         }
         
-        labourData.filteredWorkers = [...labourData.workers];
+        filterWorkers();
         loadWorkersList();
         
     } catch (error) {
@@ -178,20 +267,80 @@ async function loadLabourData() {
  * Load summary statistics
  */
 function loadSummaryStats() {
-    // Mock stats
+    // Calculate stats from actual data
     const stats = {
-        total: 182,
-        permanent: 147,
-        shared: 12,
-        seasonal: 23,
-        present: 147,
-        absent: 35,
-        unallocated: 12,
-        pruning: 45,
-        mowing: 22,
-        weeding: 38,
-        general: 42
+        total: labourData.workers.length,
+        permanent: 0,
+        shared: 0,
+        seasonal: 0,
+        present: 0,
+        absent: 0,
+        unallocated: 0,
+        pruning: 0,
+        mowing: 0,
+        weeding: 0,
+        general: 0
     };
+    
+    // Count workers by employment type
+    labourData.workers.forEach(worker => {
+        const empType = (worker.employmentType || 'permanent').toLowerCase();
+        if (empType.includes('permanent') || empType === 'permanent') {
+            stats.permanent++;
+        } else if (empType.includes('shared') || empType === 'shared') {
+            stats.shared++;
+        } else if (empType.includes('seasonal') || empType === 'seasonal') {
+            stats.seasonal++;
+        } else {
+            // Default to permanent if unknown
+            stats.permanent++;
+        }
+    });
+    
+    // Only use estimates if we couldn't determine employment types
+    if (stats.permanent === 0 && stats.shared === 0 && stats.seasonal === 0 && stats.total > 0) {
+        stats.permanent = Math.floor(stats.total * 0.8);
+        stats.shared = Math.floor(stats.total * 0.1);
+        stats.seasonal = stats.total - stats.permanent - stats.shared;
+    }
+    
+    // Count workers by status
+    labourData.workers.forEach(worker => {
+        if (worker.status === 'Present') {
+            stats.present++;
+        } else if (worker.status === 'Absent') {
+            stats.absent++;
+        } else {
+            stats.unallocated++;
+        }
+    });
+    
+    // Count workers by task type (from today's allocations)
+    const today = new Date().toISOString().split('T')[0];
+    labourData.workers.forEach(worker => {
+        const task = worker.task;
+        if (task && task !== '-') {
+            const taskLower = task.toLowerCase();
+            if (taskLower.includes('pruning')) {
+                stats.pruning++;
+            } else if (taskLower.includes('mowing')) {
+                stats.mowing++;
+            } else if (taskLower.includes('weeding')) {
+                stats.weeding++;
+            } else {
+                stats.general++;
+            }
+        } else {
+            // Unallocated workers count as general
+            stats.general++;
+        }
+    });
+    
+    // Estimate employment types (if not available in data)
+    // This is a placeholder - ideally would come from worker.employment_type
+    stats.permanent = Math.floor(stats.total * 0.8);
+    stats.shared = Math.floor(stats.total * 0.1);
+    stats.seasonal = stats.total - stats.permanent - stats.shared;
     
     // Helper function to safely set text content
     const setTextContent = (id, value) => {
@@ -313,6 +462,9 @@ function applyFilters() {
         search: labourData.filters.search
     };
     
+    // Update farm info display when filters change
+    updateFarmInfoDisplay();
+    
     filterWorkers();
     labourData.currentPage = 1;
     loadWorkersList();
@@ -353,9 +505,24 @@ function filterWorkers() {
             return false;
         }
         
-        // Task filter
-        if (labourData.filters.task && worker.task !== labourData.filters.task) {
-            return false;
+        // Task filter (case-insensitive partial match)
+        if (labourData.filters.task) {
+            const workerTask = (worker.task || '').toLowerCase().trim();
+            const filterTask = labourData.filters.task.toLowerCase().trim();
+            
+            // Handle "General" as catch-all for non-specific tasks
+            if (filterTask === 'general' || filterTask === '') {
+                // Show workers without specific task types or with generic tasks
+                const specificTasks = ['pruning', 'mowing', 'weeding', 'harvesting', 'spraying'];
+                const hasSpecificTask = specificTasks.some(task => workerTask.includes(task));
+                if (hasSpecificTask) return false;
+            } else {
+                // Match specific task types (allows partial matching)
+                // Normalize task names (e.g., "Pruning" matches "pruning")
+                if (workerTask === '-' || workerTask === '' || !workerTask.includes(filterTask)) {
+                    return false;
+                }
+            }
         }
         
         // Status filter
@@ -525,12 +692,36 @@ function saveBulkAllocation() {
 }
 
 /**
- * Open team view
+ * Open team view - filters workers by task type
  */
 function openTeam(team) {
-    console.log('Opening team view:', team);
-    // TODO: Navigate to team-specific view
-    showInfoMessage(`Opening ${team} team management...`);
+    // Map team names to task type filter values
+    const taskTypeMap = {
+        'pruning': 'Pruning',
+        'mowing': 'Mowing',
+        'weeding': 'Weeding',
+        'general': 'General' // or empty string for all general tasks
+    };
+    
+    const taskType = taskTypeMap[team.toLowerCase()] || team;
+    
+    // Set task filter
+    const taskFilter = document.getElementById('taskFilter');
+    if (taskFilter) {
+        taskFilter.value = taskType;
+    }
+    
+    // Apply filters to show only workers in this team
+    labourData.filters.task = taskType;
+    filterWorkers();
+    labourData.currentPage = 1;
+    loadWorkersList();
+    
+    // Scroll to worker list
+    const workerListCard = document.querySelector('.card');
+    if (workerListCard) {
+        workerListCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 /**

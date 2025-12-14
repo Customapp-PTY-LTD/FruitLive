@@ -1,4 +1,4 @@
-// Hope Diamond Transport Admin Portal - Common Utilities
+// FruitLive Admin Portal - Common Utilities
 // Following WebPortals module pattern
 
 var _common = {
@@ -291,5 +291,31 @@ var _common = {
         const url = new URL(window.location);
         url.searchParams.delete(name);
         window.history.replaceState({}, '', url);
+    },
+
+    // Wait for dataFunctions to be available
+    waitForDataFunctions: async function (maxRetries = 50, delay = 100) {
+        for (let i = 0; i < maxRetries; i++) {
+            if (typeof dataFunctions !== 'undefined' && dataFunctions && typeof dataFunctions.getFarms === 'function') {
+                return dataFunctions;
+            }
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+        throw new Error('dataFunctions not available after waiting');
     }
+};
+
+// Make _common available globally
+window._common = _common;
+const common = _common;
+
+// Also add waitForDataFunctions as a standalone global function for convenience
+window.waitForDataFunctions = async function (maxRetries = 50, delay = 100) {
+    for (let i = 0; i < maxRetries; i++) {
+        if (typeof dataFunctions !== 'undefined' && dataFunctions && typeof dataFunctions.getFarms === 'function') {
+            return dataFunctions;
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    throw new Error('dataFunctions not available after waiting');
 };

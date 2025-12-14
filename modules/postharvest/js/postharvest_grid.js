@@ -7,6 +7,21 @@ async function initializePostharvestGrid() {
     try {
         console.log('Post-Harvest Grid initialized');
         
+        // Wait for dataFunctions to be available
+        if (typeof waitForDataFunctions === 'function') {
+            try {
+                await waitForDataFunctions(50, 100);
+            } catch (error) {
+                console.error('dataFunctions not available:', error);
+                throw new Error('Data functions not available');
+            }
+        } else if (typeof dataFunctions === 'undefined') {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (typeof dataFunctions === 'undefined') {
+                throw new Error('dataFunctions is not available');
+            }
+        }
+        
         // Check if utility functions are available
         if (typeof populateFarmSelector === 'undefined') {
             console.error('populateFarmSelector is not defined. Make sure farm-selector-utils.js is loaded.');
@@ -27,6 +42,8 @@ async function initializePostharvestGrid() {
                     // Reload data when farm changes
                     loadConsignments().catch(err => {
                         console.error('Error reloading consignments:', err);
+                    }).then(() => {
+                        updatePostharvestSummaryCards();
                     });
                 });
             }
@@ -35,8 +52,37 @@ async function initializePostharvestGrid() {
         }
         
         await loadConsignments();
+        updatePostharvestSummaryCards();
     } catch (error) {
         console.error('Error initializing Post-Harvest Grid:', error);
+    }
+}
+
+/**
+ * Update summary cards with calculated values
+ */
+function updatePostharvestSummaryCards() {
+    try {
+        // Estimate returns based on consignments
+        // Simplified: assume average price per carton
+        const avgPricePerCarton = 50; // R50 per carton (rough estimate)
+        
+        const estimatedReturns = postharvestData.consignments.reduce((sum, consignment) => {
+            const cartons = parseFloat(consignment.total_cartons) || 0;
+            return sum + (cartons * avgPricePerCarton);
+        }, 0);
+        
+        // Update DOM element
+        const returnsEl = document.querySelector('#estimatedReturns');
+        if (returnsEl) {
+            if (estimatedReturns >= 1000000) {
+                returnsEl.textContent = 'R' + (estimatedReturns / 1000000).toFixed(1) + 'M';
+            } else {
+                returnsEl.textContent = 'R' + estimatedReturns.toLocaleString('en-ZA', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            }
+        }
+    } catch (error) {
+        console.error('Error updating postharvest summary cards:', error);
     }
 }
 
@@ -58,8 +104,10 @@ async function loadConsignments() {
             postharvestData.consignments = [];
         }
         renderConsignments();
+        updatePostharvestSummaryCards();
     } catch (error) {
         console.error('Error loading consignments:', error);
+        updatePostharvestSummaryCards();
     }
 }
 

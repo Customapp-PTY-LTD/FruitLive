@@ -12,6 +12,21 @@ async function initializeDashboard() {
     try {
         console.log('Initializing Dashboard Module...');
         
+        // Wait for dataFunctions to be available
+        if (typeof waitForDataFunctions === 'function') {
+            try {
+                await waitForDataFunctions(50, 100);
+            } catch (error) {
+                console.error('dataFunctions not available:', error);
+                throw new Error('Data functions not available');
+            }
+        } else if (typeof dataFunctions === 'undefined') {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (typeof dataFunctions === 'undefined') {
+                throw new Error('dataFunctions is not available');
+            }
+        }
+        
         // Set current date
         setCurrentDate();
         
@@ -83,7 +98,26 @@ async function loadFarmsAndSetupSelector() {
             return;
         }
         
-        const farms = await dataFunctions.getFarms();
+        const farmsResponse = await dataFunctions.getFarms();
+        console.log('Dashboard - Farms response:', farmsResponse);
+        
+        // Handle different response structures
+        let farms = farmsResponse;
+        if (farmsResponse && !Array.isArray(farmsResponse)) {
+            if (farmsResponse.farms && Array.isArray(farmsResponse.farms)) {
+                farms = farmsResponse.farms;
+            } else if (farmsResponse.data && Array.isArray(farmsResponse.data)) {
+                farms = farmsResponse.data;
+            } else if (farmsResponse.result && Array.isArray(farmsResponse.result)) {
+                farms = farmsResponse.result;
+            } else {
+                console.warn('Dashboard - Farms response is not in expected format:', farmsResponse);
+                farms = [];
+            }
+        }
+        
+        console.log('Dashboard - Processed farms:', farms);
+        console.log('Dashboard - Farms count:', farms?.length || 0);
         
         if (farms && farms.length > 0) {
             // Clear loading message
@@ -215,13 +249,13 @@ async function loadDashboardData() {
                 // Store selected farm
                 localStorage.setItem('selectedFarmId', selectedFarm.id);
             } else {
-                // Fallback to mock data if no farms
+                // No farms available - use empty state
                 dashboardData = {
                     farm: {
-                        name: 'FruitLive Demo Farm',
-                        location: 'Paarl, Western Cape',
-                        size: '125 hectares',
-                        cropType: 'Apples & Citrus'
+                        name: 'No Farm Selected',
+                        location: 'Select a farm to view details',
+                        size: 'N/A',
+                        cropType: 'N/A'
                     }
                 };
             }
@@ -241,12 +275,12 @@ async function loadDashboardData() {
     } catch (error) {
         console.error('Error loading dashboard data:', error);
         showErrorMessage('Failed to load dashboard data');
-        // Use fallback mock data
+        // Use empty state on error
         dashboardData = {
             farm: {
-                name: 'FruitLive Demo Farm',
-                location: 'Paarl, Western Cape',
-                size: '125 hectares',
+                name: 'Error Loading Data',
+                location: 'Unable to load farm information',
+                size: 'N/A',
                 cropType: 'Apples & Citrus'
             }
         };
@@ -384,7 +418,7 @@ async function loadStats() {
             {
                 icon: 'bi-cash-stack',
                 title: 'Labour Cost',
-                value: 'R87,450',
+                value: statsData?.labour_cost_week ? `R${parseFloat(statsData.labour_cost_week).toLocaleString('en-ZA', {minimumFractionDigits: 0, maximumFractionDigits: 0})}` : 'N/A',
                 label: 'this week'
             },
             {

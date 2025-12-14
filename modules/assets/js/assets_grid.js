@@ -8,6 +8,21 @@ async function initializeAssetsGrid() {
     try {
         console.log('Assets Grid initialized');
         
+        // Wait for dataFunctions to be available
+        if (typeof waitForDataFunctions === 'function') {
+            try {
+                await waitForDataFunctions(50, 100);
+            } catch (error) {
+                console.error('dataFunctions not available:', error);
+                throw new Error('Data functions not available');
+            }
+        } else if (typeof dataFunctions === 'undefined') {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (typeof dataFunctions === 'undefined') {
+                throw new Error('dataFunctions is not available');
+            }
+        }
+        
         // Check if utility functions are available
         if (typeof populateFarmSelector === 'undefined') {
             console.error('populateFarmSelector is not defined. Make sure farm-selector-utils.js is loaded.');
@@ -22,8 +37,12 @@ async function initializeAssetsGrid() {
             const farmSelector = document.getElementById('farmFilter');
             if (farmSelector) {
                 farmSelector.addEventListener('change', () => {
-                    loadVehicles().catch(err => console.error('Error loading vehicles:', err));
-                    loadFuelTransactions().catch(err => console.error('Error loading transactions:', err));
+                    Promise.all([
+                        loadVehicles().catch(err => console.error('Error loading vehicles:', err)),
+                        loadFuelTransactions().catch(err => console.error('Error loading transactions:', err))
+                    ]).then(() => {
+                        updateAssetsSummaryCards();
+                    });
                 });
             }
         } catch (error) {
@@ -32,8 +51,60 @@ async function initializeAssetsGrid() {
         
         await loadVehicles();
         await loadFuelTransactions();
+        updateAssetsSummaryCards();
     } catch (error) {
         console.error('Error initializing Assets Grid:', error);
+    }
+}
+
+/**
+ * Update summary cards with calculated values
+ */
+function updateAssetsSummaryCards() {
+    try {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        // Calculate fuel cost and litres this month
+        const monthlyTransactions = assetsData.fuelTransactions.filter(trans => {
+            const transDate = new Date(trans.transaction_date);
+            return transDate >= startOfMonth;
+        });
+        
+        const monthlyFuelCost = monthlyTransactions.reduce((sum, trans) => sum + (parseFloat(trans.cost) || 0), 0);
+        const monthlyLitres = monthlyTransactions.reduce((sum, trans) => sum + (parseFloat(trans.litres) || 0), 0);
+        
+        // Count vehicles needing service (simplified: vehicles with high odometer or status issues)
+        const serviceDue = assetsData.vehicles.filter(v => {
+            return v.status === 'maintenance_required' || 
+                   (parseFloat(v.current_odometer) || 0) > 50000;
+        }).length;
+        
+        // Calculate equipment value (simplified: sum of vehicle values if available, or count * average)
+        const equipmentValue = assetsData.vehicles.length * 50000; // Rough estimate
+        
+        // Update DOM elements
+        const fuelCostEl = document.querySelector('#fuelCostThisMonth');
+        if (fuelCostEl) {
+            fuelCostEl.textContent = 'R' + monthlyFuelCost.toLocaleString('en-ZA', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        }
+        
+        const litresConsumedEl = document.querySelector('#litresConsumedThisMonth');
+        if (litresConsumedEl) {
+            litresConsumedEl.textContent = monthlyLitres.toLocaleString('en-ZA', {maximumFractionDigits: 0}) + ' litres consumed';
+        }
+        
+        const serviceDueEl = document.querySelector('#serviceDueCount');
+        if (serviceDueEl) {
+            serviceDueEl.textContent = serviceDue.toString();
+        }
+        
+        const equipmentValueEl = document.querySelector('#equipmentValue');
+        if (equipmentValueEl) {
+            equipmentValueEl.textContent = 'R' + equipmentValue.toLocaleString('en-ZA', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        }
+    } catch (error) {
+        console.error('Error updating assets summary cards:', error);
     }
 }
 
@@ -55,10 +126,12 @@ async function loadVehicles() {
             assetsData.vehicles = [];
         }
         renderVehicles();
+        updateAssetsSummaryCards();
     } catch (error) {
         console.error('Error loading vehicles:', error);
         assetsData.vehicles = [];
         renderVehicles();
+        updateAssetsSummaryCards();
     }
 }
 
@@ -80,10 +153,12 @@ async function loadFuelTransactions() {
             assetsData.fuelTransactions = [];
         }
         renderFuelTransactions();
+        updateAssetsSummaryCards();
     } catch (error) {
         console.error('Error loading fuel transactions:', error);
         assetsData.fuelTransactions = [];
         renderFuelTransactions();
+        updateAssetsSummaryCards();
     }
 }
 

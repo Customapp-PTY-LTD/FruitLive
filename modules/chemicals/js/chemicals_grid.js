@@ -8,6 +8,21 @@ async function initializeChemicalsGrid() {
     try {
         console.log('Chemicals Grid initialized');
         
+        // Wait for dataFunctions to be available
+        if (typeof waitForDataFunctions === 'function') {
+            try {
+                await waitForDataFunctions(50, 100);
+            } catch (error) {
+                console.error('dataFunctions not available:', error);
+                throw new Error('Data functions not available');
+            }
+        } else if (typeof dataFunctions === 'undefined') {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (typeof dataFunctions === 'undefined') {
+                throw new Error('dataFunctions is not available');
+            }
+        }
+        
         // Check if utility functions are available
         if (typeof populateFarmSelector === 'undefined') {
             console.error('populateFarmSelector is not defined. Make sure farm-selector-utils.js is loaded.');
@@ -28,6 +43,8 @@ async function initializeChemicalsGrid() {
                     // Reload data when farm changes
                     loadSprayApplications().catch(err => {
                         console.error('Error reloading applications:', err);
+                    }).then(() => {
+                        updateChemicalsSummaryCards();
                     });
                 });
             }
@@ -37,8 +54,42 @@ async function initializeChemicalsGrid() {
         
         await loadChemicals();
         await loadSprayApplications();
+        updateChemicalsSummaryCards();
     } catch (error) {
         console.error('Error initializing Chemicals Grid:', error);
+    }
+}
+
+/**
+ * Update summary cards with calculated values
+ */
+function updateChemicalsSummaryCards() {
+    try {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const startOfSeason = new Date(currentYear, 0, 1); // Start of year (simplified season)
+        
+        // Calculate cost this season (sum of all chemical purchases/applications)
+        // This is simplified - ideally would track actual purchase costs
+        const seasonCost = chemicalsData.applications
+            .filter(app => {
+                const appDate = new Date(app.application_date);
+                return appDate >= startOfSeason;
+            })
+            .reduce((sum, app) => {
+                // Estimate cost: quantity * average price per unit (simplified)
+                const quantity = parseFloat(app.quantity_used || app.total_quantity) || 0;
+                const estimatedCost = quantity * 50; // Rough estimate: R50 per unit
+                return sum + estimatedCost;
+            }, 0);
+        
+        // Update DOM element
+        const costEl = document.querySelector('#chemicalsCostThisSeason');
+        if (costEl) {
+            costEl.textContent = 'R' + seasonCost.toLocaleString('en-ZA', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        }
+    } catch (error) {
+        console.error('Error updating chemicals summary cards:', error);
     }
 }
 
@@ -84,10 +135,12 @@ async function loadSprayApplications() {
             chemicalsData.applications = [];
         }
         renderApplications();
+        updateChemicalsSummaryCards();
     } catch (error) {
         console.error('Error loading spray applications:', error);
         chemicalsData.applications = [];
         renderApplications();
+        updateChemicalsSummaryCards();
     }
 }
 

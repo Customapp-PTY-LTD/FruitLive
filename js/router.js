@@ -86,7 +86,7 @@ var _appRouter = {
         }
 
         // Update page title
-        document.title = route.title + ' - Hope Diamond Transport';
+        document.title = route.title + ' - FruitLive';
 
         // Load module
         if (typeof _app !== 'undefined') {

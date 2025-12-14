@@ -35,6 +35,13 @@ async function populateFarmSelector(selectorId, selectedFarmId = null, includeAl
     }
     
     try {
+        // Ensure dataFunctions is available
+        if (typeof dataFunctions === 'undefined' || !dataFunctions.getFarms) {
+            console.error('dataFunctions.getFarms is not available');
+            selector.innerHTML = '<option value="">Error loading farms</option>';
+            return;
+        }
+        
         const farms = await dataFunctions.getFarms();
         
         // Clear existing options
@@ -92,6 +99,25 @@ async function populateBlockSelector(selectorId, farmId = null, selectedBlockId 
     }
     
     try {
+        // Wait for dataFunctions if not available
+        if (typeof dataFunctions === 'undefined') {
+            if (typeof waitForDataFunctions === 'function') {
+                try {
+                    await waitForDataFunctions(20, 100);
+                } catch (error) {
+                    console.warn('Could not wait for dataFunctions:', error);
+                }
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+        }
+        
+        if (typeof dataFunctions === 'undefined' || !dataFunctions.getBlocks) {
+            console.error('dataFunctions.getBlocks is not available');
+            selector.innerHTML = '<option value="">Data functions not available</option>';
+            return;
+        }
+        
         const blocks = await dataFunctions.getBlocks();
         
         // Clear existing options
@@ -151,7 +177,25 @@ async function populateVarietySelector(selectorId, selectedVarietyId = null, inc
         return;
     }
     
-    try {
+            try {
+                // Wait for dataFunctions if not available
+                if (typeof dataFunctions === 'undefined') {
+                    if (typeof waitForDataFunctions === 'function') {
+                        await waitForDataFunctions(20, 100);
+                    } else {
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                }
+                
+        // Wait for dataFunctions if not available
+        if (typeof dataFunctions === 'undefined') {
+            if (typeof waitForDataFunctions === 'function') {
+                await waitForDataFunctions(20, 100);
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+        }
+        
         if (typeof dataFunctions === 'undefined' || !dataFunctions.getVarieties) {
             console.error('dataFunctions.getVarieties is not available');
             selector.innerHTML = '<option value="">Data functions not available</option>';

@@ -18,6 +18,21 @@ async function initializeAdminGrid() {
     try {
         console.log('Initializing Admin Grid Module...');
         
+        // Wait for dataFunctions to be available
+        if (typeof waitForDataFunctions === 'function') {
+            try {
+                await waitForDataFunctions(50, 100);
+            } catch (error) {
+                console.error('dataFunctions not available:', error);
+                throw new Error('Data functions not available');
+            }
+        } else if (typeof dataFunctions === 'undefined') {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (typeof dataFunctions === 'undefined') {
+                throw new Error('dataFunctions is not available');
+            }
+        }
+        
         // Set up Bootstrap tab event handlers
         const tabElements = document.querySelectorAll('button[data-bs-toggle="tab"]');
         tabElements.forEach(tab => {
@@ -97,34 +112,82 @@ function handleTabSwitch(targetId) {
  */
 async function loadPortfolioSummary() {
     try {
-        // TODO: Replace with actual API call
-        // const data = await dataFunctions.callFunction('get_portfolio_summary', {});
-        
-        // Mock data
-        const summary = {
-            totalFarms: 5,
-            totalUsers: 24,
-            totalWorkers: 547,
-            totalHectares: 533,
-            totalVehicles: 50,
-            totalEquipment: 190
+        // Get actual data from API
+        let summary = {
+            totalFarms: 0,
+            totalUsers: 0,
+            totalWorkers: 0,
+            totalHectares: 0,
+            totalVehicles: 0,
+            totalEquipment: 0
         };
         
-        // Update summary cards
-        document.getElementById('totalFarms').textContent = summary.totalFarms;
-        document.getElementById('totalUsers').textContent = summary.totalUsers;
-        document.getElementById('totalWorkers').textContent = summary.totalWorkers;
-        document.getElementById('totalHectares').textContent = summary.totalHectares;
+        try {
+            // Get farms
+            if (typeof dataFunctions !== 'undefined' && dataFunctions.getFarms) {
+                const farms = await dataFunctions.getFarms();
+                if (farms && Array.isArray(farms)) {
+                    summary.totalFarms = farms.length;
+                    summary.totalHectares = farms.reduce((sum, farm) => sum + (parseFloat(farm.hectares) || 0), 0);
+                }
+            }
+            
+            // Get users (if function exists - may not be implemented yet)
+            // For now, skip user count if function doesn't exist
+            if (typeof dataFunctions !== 'undefined' && typeof dataFunctions.getUsers === 'function') {
+                try {
+                    const users = await dataFunctions.getUsers();
+                    if (users && Array.isArray(users)) {
+                        summary.totalUsers = users.length;
+                    }
+                } catch (error) {
+                    console.warn('Could not load users count:', error);
+                }
+            }
+            
+            // Get workers
+            if (typeof dataFunctions !== 'undefined' && dataFunctions.getWorkers) {
+                const workers = await dataFunctions.getWorkers({});
+                if (workers && Array.isArray(workers)) {
+                    summary.totalWorkers = workers.length;
+                }
+            }
+            
+            // Get vehicles
+            if (typeof dataFunctions !== 'undefined' && dataFunctions.getVehicles) {
+                const vehicles = await dataFunctions.getVehicles({});
+                if (vehicles && Array.isArray(vehicles)) {
+                    summary.totalVehicles = vehicles.length;
+                }
+            }
+            
+            // Equipment count (same as vehicles for now)
+            summary.totalEquipment = summary.totalVehicles;
+        } catch (error) {
+            console.error('Error loading portfolio summary data:', error);
+            // Keep default zeros if API fails
+        }
+        
+        // Update summary cards (safely handle missing elements)
+        const setTextContent = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        };
+        
+        setTextContent('totalFarms', summary.totalFarms);
+        setTextContent('totalUsers', summary.totalUsers);
+        setTextContent('totalWorkers', summary.totalWorkers);
+        setTextContent('totalHectares', summary.totalHectares);
         
         // Update additional summary elements
-        document.getElementById('summaryHectares').textContent = summary.totalHectares + ' ha';
-        document.getElementById('summaryWorkers').textContent = summary.totalWorkers;
-        document.getElementById('summaryVehicles').textContent = summary.totalVehicles;
-        document.getElementById('summaryEquipment').textContent = summary.totalEquipment;
+        setTextContent('summaryHectares', summary.totalHectares + ' ha');
+        setTextContent('summaryWorkers', summary.totalWorkers);
+        setTextContent('summaryVehicles', summary.totalVehicles);
+        setTextContent('summaryEquipment', summary.totalEquipment);
         
-        document.getElementById('resourceWorkers').textContent = summary.totalWorkers;
-        document.getElementById('resourceVehicles').textContent = summary.totalVehicles;
-        document.getElementById('resourceEquipment').textContent = summary.totalEquipment;
+        setTextContent('resourceWorkers', summary.totalWorkers);
+        setTextContent('resourceVehicles', summary.totalVehicles);
+        setTextContent('resourceEquipment', summary.totalEquipment);
         
     } catch (error) {
         console.error('Error loading portfolio summary:', error);
@@ -145,84 +208,48 @@ async function loadFarms() {
         const farms = await dataFunctions.getFarms();
         
         if (!farms || farms.length === 0) {
-            // Fallback to mock data
-            const farms = [
-            {
-                id: '1',
-                name: 'Applewood Farm',
-                location: 'Paarl, Western Cape',
-                region: 'Western Cape',
-                hectares: 125,
-                crop_type: 'Apples',
-                manager_name: 'John Smith',
-                status: 'active',
-                workers: 120,
-                vehicles: 12
-            },
-            {
-                id: '2',
-                name: 'Citrus Valley',
-                location: 'Citrusdal, Western Cape',
-                region: 'Western Cape',
-                hectares: 98,
-                crop_type: 'Citrus',
-                manager_name: 'Sarah Johnson',
-                status: 'active',
-                workers: 95,
-                vehicles: 8
-            },
-            {
-                id: '3',
-                name: 'Grape Heights',
-                location: 'Stellenbosch, Western Cape',
-                region: 'Western Cape',
-                hectares: 156,
-                crop_type: 'Grapes',
-                manager_name: 'Mike Brown',
-                status: 'active',
-                workers: 180,
-                vehicles: 15
-            },
-            {
-                id: '4',
-                name: 'Kiwi Ridge',
-                location: 'George, Western Cape',
-                region: 'Western Cape',
-                hectares: 87,
-                crop_type: 'Kiwis',
-                manager_name: 'Lisa Davies',
-                status: 'active',
-                workers: 78,
-                vehicles: 7
-            },
-            {
-                id: '5',
-                name: 'Stone Fruit Estate',
-                location: 'Worcester, Western Cape',
-                region: 'Western Cape',
-                hectares: 67,
-                crop_type: 'Stone Fruit',
-                manager_name: 'David Wilson',
-                status: 'active',
-                workers: 74,
-                vehicles: 8
-            }
-            ];
-            adminData.farms = farms;
+            adminData.farms = [];
         } else {
-            // Map database farms to display format
-            adminData.farms = farms.map(farm => ({
-                id: farm.id,
-                name: farm.name,
-                location: farm.location || 'Location not set',
-                region: farm.region || 'Region not set',
-                hectares: farm.hectares || 0,
-                crop_type: farm.crop_type || 'Not specified',
-                manager_name: 'Manager TBD', // TODO: Get from manager_id
-                status: farm.status || 'active',
-                workers: 0, // TODO: Count from workers table
-                vehicles: 0 // TODO: Count from vehicles table
+            // Get worker and vehicle counts for each farm
+            const farmsWithCounts = await Promise.all(farms.map(async (farm) => {
+                let workerCount = 0;
+                let vehicleCount = 0;
+                
+                try {
+                    // Count workers for this farm
+                    if (dataFunctions.getWorkers) {
+                        const workers = await dataFunctions.getWorkers({ farmId: farm.id });
+                        if (workers && Array.isArray(workers)) {
+                            workerCount = workers.length;
+                        }
+                    }
+                    
+                    // Count vehicles for this farm
+                    if (dataFunctions.getVehicles) {
+                        const vehicles = await dataFunctions.getVehicles({ farmId: farm.id });
+                        if (vehicles && Array.isArray(vehicles)) {
+                            vehicleCount = vehicles.length;
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`Error getting counts for farm ${farm.id}:`, error);
+                }
+                
+                return {
+                    id: farm.id,
+                    name: farm.name,
+                    location: farm.location || 'Location not set',
+                    region: farm.region || 'Region not set',
+                    hectares: farm.hectares || 0,
+                    crop_type: farm.crop_type || 'Not specified',
+                    manager_name: farm.manager_name || 'Manager TBD',
+                    status: farm.status || 'active',
+                    workers: workerCount,
+                    vehicles: vehicleCount
+                };
             }));
+            
+            adminData.farms = farmsWithCounts;
         }
         
         renderFarmsList(adminData.farms);

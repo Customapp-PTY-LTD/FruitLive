@@ -1,4 +1,4 @@
-// Hope Diamond Transport Admin Portal - Main Application
+// FruitLive Admin Portal - Main Application
 // Updated to work with new router system
 
 // Global application object
@@ -13,7 +13,7 @@ var _app = {
 
     // Initialize application
     init: function () {
-        console.log('Initializing Hope Diamond Transport Admin Portal...');
+        console.log('Initializing FruitLive Admin Portal...');
 
         // Initialize Supabase client
         this.initSupabase();
