@@ -28,8 +28,9 @@ async function assignWorkersToFarm(farmId, count = 15) {
         console.log(`📋 Found ${allWorkers?.length || 0} total workers`);
         
         // Filter workers that don't have a current_farm_id
+        // Check for falsy values (null, undefined, empty string) - UUIDs don't need trimming
         const unassignedWorkers = Array.isArray(allWorkers) 
-            ? allWorkers.filter(w => !w.current_farm_id || !w.current_farm_id.trim())
+            ? allWorkers.filter(w => !w.current_farm_id || (typeof w.current_farm_id === 'string' && !w.current_farm_id.trim()))
             : [];
         
         console.log(`👥 Found ${unassignedWorkers.length} unassigned workers`);
@@ -136,7 +137,7 @@ async function createWorkersForFarm(farmId, count = 15) {
                 id_number: idNumber,
                 employee_number: employeeNumber,
                 hourly_rate: 25 + Math.random() * 15, // R25-R40 per hour
-                phone: `+27${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+                phone: `+27${Math.floor(Math.random() * 900000000) + 100000000}`, // 9 digits after +27 (SA mobile format)
                 is_active: true,
                 employment_type: i % 3 === 0 ? 'permanent' : (i % 3 === 1 ? 'seasonal' : 'contract'),
                 home_farm_id: farmId,
