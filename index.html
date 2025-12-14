@@ -8,6 +8,8 @@
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Phoenix Theme CSS -->
@@ -41,6 +43,16 @@
                 </ul>
 
                 <ul class="navbar-nav ms-auto">
+                    <!-- Theme Selector -->
+                    <li class="nav-item dropdown me-2" id="themeSelector">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false" title="Change Theme">
+                            <i class="fas fa-leaf"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <!-- Theme options will be populated by ThemeManager -->
+                        </ul>
+                    </li>
 
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
@@ -154,12 +166,12 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link active" href="#" data-bs-toggle="collapse"
-                                data-bs-target="#userManagementCollapse" aria-expanded="true"
+                                data-bs-target="#userManagementCollapse" aria-expanded="false"
                                 aria-controls="userManagementCollapse">
                                 <i class="fas fa-users me-2"></i>User Management
-                                <i class="fas fa-chevron-down ms-auto"></i>
+                                <i class="fas fa-chevron-right ms-auto"></i>
                             </a>
-                            <div class="collapse show" id="userManagementCollapse">
+                            <div class="collapse" id="userManagementCollapse">
                                 <ul class="nav flex-column ms-3">
                                     <li class="nav-item">
                                         <a class="nav-link" href="#" route="users-grid">
@@ -305,6 +317,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- Application Scripts -->
+    <script src="js/themes.js"></script>
     <script src="js/data-functions.js"></script>
     <script src="js/auth-service.js"></script>
     <script src="js/common.js"></script>
@@ -366,9 +379,10 @@
 
                 // Listen for collapse events to update chevron icon and position submenu
                 userManagementCollapse.addEventListener('show.bs.collapse', function () {
-                    const chevron = userManagementToggle.querySelector('.fa-chevron-down');
+                    const chevron = userManagementToggle.querySelector('.fa-chevron-right, .fa-chevron-down');
                     if (chevron) {
-                        chevron.style.transform = 'rotate(180deg)';
+                        chevron.classList.remove('fa-chevron-right');
+                        chevron.classList.add('fa-chevron-down');
                     }
                     
                     // Position submenu panel when sidebar is collapsed
@@ -390,9 +404,10 @@
                 });
 
                 userManagementCollapse.addEventListener('hide.bs.collapse', function () {
-                    const chevron = userManagementToggle.querySelector('.fa-chevron-down');
+                    const chevron = userManagementToggle.querySelector('.fa-chevron-right, .fa-chevron-down');
                     if (chevron) {
-                        chevron.style.transform = 'rotate(0deg)';
+                        chevron.classList.remove('fa-chevron-down');
+                        chevron.classList.add('fa-chevron-right');
                     }
                     // Reset positioning
                     userManagementCollapse.style.top = '';
@@ -506,6 +521,12 @@
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Store last active page before logout (check sessionStorage first, then use current route)
+                    const lastActivePage = sessionStorage.getItem('lastActivePage') || 
+                                         (typeof _appRouter !== 'undefined' && _appRouter.currentRoute) || 
+                                         'dashboard';
+                    localStorage.setItem('lastActivePage', lastActivePage);
+                    
                     // Get cc parameter from localStorage (stored as client_guid during sign-in)
                     const ccParam = localStorage.getItem('client_guid');
                     
