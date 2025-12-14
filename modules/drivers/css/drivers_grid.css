@@ -1,0 +1,216 @@
+.drivers-grid-wrapper {
+    padding-bottom: 2rem;
+}
+
+.drivers-hero-card {
+    border: none;
+    background: linear-gradient(135deg, rgba(49, 77, 145, 0.1), rgba(90, 125, 198, 0.15));
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.drivers-title {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.drivers-subtitle {
+    color: #6b7280;
+}
+
+.live-updates-badge {
+    background-color: rgba(49, 77, 145, 0.15);
+    color: #314d91;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.4rem 1rem;
+    letter-spacing: 0.04em;
+}
+
+.drivers-table-card {
+    border: none;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.search-wrapper {
+    position: relative;
+    min-width: 260px;
+}
+
+.search-wrapper i {
+    position: absolute;
+    top: 50%;
+    left: 0.85rem;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.search-wrapper input {
+    width: 100%;
+    padding: 0.55rem 0.75rem 0.55rem 2.5rem;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    font-weight: 500;
+}
+
+.drivers-table thead {
+    background-color: #f9fafb;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+}
+
+.drivers-table tbody tr td {
+    vertical-align: middle;
+    font-weight: 500;
+}
+
+.drivers-table th:nth-child(1),
+.drivers-table td:nth-child(1) {
+    width: 18%;
+    min-width: 150px;
+}
+
+.drivers-table th:nth-child(2),
+.drivers-table td:nth-child(2) {
+    width: 12%;
+    min-width: 110px;
+}
+
+.drivers-table th:nth-child(3),
+.drivers-table td:nth-child(3) {
+    width: 12%;
+    min-width: 110px;
+}
+
+.drivers-table th:nth-child(4),
+.drivers-table td:nth-child(4) {
+    width: 12%;
+    min-width: 110px;
+}
+
+.drivers-table th:nth-child(5),
+.drivers-table td:nth-child(5) {
+    width: 12%;
+    min-width: 110px;
+}
+
+.drivers-table th:nth-child(6),
+.drivers-table td:nth-child(6) {
+    width: 10%;
+    min-width: 90px;
+    text-align: center;
+}
+
+.drivers-table th:nth-child(7),
+.drivers-table td:nth-child(7) {
+    width: 10%;
+    min-width: 90px;
+}
+
+.drivers-table th:nth-child(8),
+.drivers-table td:nth-child(8) {
+    width: 14%;
+    min-width: 120px;
+}
+
+/* Padding handled by px-3 class in HTML, same as inspections */
+
+.drivers-table .driver-name {
+    font-weight: 600;
+    color: #111827;
+}
+
+.license-badge,
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.license-valid {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+}
+
+.license-expiring {
+    background-color: rgba(251, 191, 36, 0.2);
+    color: #b45309;
+}
+
+.license-expired {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #b91c1c;
+}
+
+.status-active {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+}
+
+/* Ensure status-active matches license-valid exactly */
+.status-badge.status-active {
+    background-color: rgba(34, 197, 94, 0.15) !important;
+    color: #15803d !important;
+}
+
+.status-training {
+    background-color: rgba(251, 191, 36, 0.2);
+    color: #b45309;
+}
+
+.status-inactive {
+    background-color: rgba(107, 114, 128, 0.2);
+    color: #374151;
+}
+
+.drivers-table .action-buttons .btn {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.65rem;
+}
+
+.drivers-table .action-buttons .btn i {
+    font-size: 0.95rem;
+}
+
+.empty-state i {
+    color: #cbd5f5;
+    font-size: 2rem;
+}
+
+.modal .form-label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.btn-outline-primary {
+    border-color: rgba(49, 77, 145, 0.3);
+    color: #314d91;
+}
+
+.btn-outline-primary:hover {
+    background-color: #314d91;
+    color: #fff;
+}
+
+.btn-primary {
+    background-color: #314d91;
+    border-color: #314d91;
+}
+
+.btn-primary:hover {
+    background-color: #263b72;
+    border-color: #263b72;
+}
+

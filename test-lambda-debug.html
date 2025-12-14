@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lambda Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Lambda Debug Test Suite</h1>
+
+    <div class="test-section info">
+        <h3>Lambda URL: https://r5kwwuprd75nfmnhjtna3hebxy0knpyr.lambda-url.af-south-1.on.aws</h3>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 1: Basic Connectivity</h3>
+        <button onclick="testBasicConnectivity()">Test Basic GET</button>
+        <div id="test1-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Health Endpoint</h3>
+        <button onclick="testHealthEndpoint()">Test /proxy/health</button>
+        <div id="test2-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Auth/Google Endpoint (Minimal)</h3>
+        <button onclick="testAuthGoogleMinimal()">Test /auth/google (Minimal)</button>
+        <div id="test3-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 4: Auth/Google Endpoint (Full)</h3>
+        <button onclick="testAuthGoogleFull()">Test /auth/google (Full)</button>
+        <div id="test4-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 5: CORS Test</h3>
+        <button onclick="testCORS()">Test CORS Headers</button>
+        <div id="test5-result"></div>
+    </div>
+
+    <script>
+        const LAMBDA_URL = 'https://r5kwwuprd75nfmnhjtna3hebxy0knpyr.lambda-url.af-south-1.on.aws';
+
+        function displayResult(testId, success, data, error = null) {
+            const resultDiv = document.getElementById(testId);
+            const className = success ? 'success' : 'error';
+            resultDiv.className = `test-section ${className}`;
+
+            if (success) {
+                resultDiv.innerHTML = `<h4>✅ Success</h4><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                resultDiv.innerHTML = `<h4>❌ Error</h4><pre>${error || JSON.stringify(data, null, 2)}</pre>`;
+            }
+        }
+
+        async function testBasicConnectivity() {
+            try {
+                const response = await fetch(LAMBDA_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.text();
+                displayResult('test1-result', response.ok, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: data
+                });
+            } catch (error) {
+                displayResult('test1-result', false, null, error.message);
+            }
+        }
+
+        async function testHealthEndpoint() {
+            try {
+                const response = await fetch(`${LAMBDA_URL}/proxy/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.text();
+                displayResult('test2-result', response.ok, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: data
+                });
+            } catch (error) {
+                displayResult('test2-result', false, null, error.message);
+            }
+        }
+
+        async function testAuthGoogleMinimal() {
+            try {
+                const response = await fetch(`${LAMBDA_URL}/auth/google`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        test: 'minimal'
+                    })
+                });
+
+                const data = await response.text();
+                displayResult('test3-result', response.ok, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: data
+                });
+            } catch (error) {
+                displayResult('test3-result', false, null, error.message);
+            }
+        }
+
+        async function testAuthGoogleFull() {
+            try {
+                const response = await fetch(`${LAMBDA_URL}/auth/google`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        access_token: 'test-access-token',
+                        user_info: {
+                            id: 'test-google-id',
+                            email: 'test@example.com',
+                            name: 'Test User',
+                            picture: 'https://example.com/avatar.jpg'
+                        }
+                    })
+                });
+
+                const data = await response.text();
+                displayResult('test4-result', response.ok, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: data
+                });
+            } catch (error) {
+                displayResult('test4-result', false, null, error.message);
+            }
+        }
+
+        async function testCORS() {
+            try {
+                const response = await fetch(`${LAMBDA_URL}/auth/google`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+
+                const headers = Object.fromEntries(response.headers.entries());
+                displayResult('test5-result', response.ok, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    corsHeaders: {
+                        'Access-Control-Allow-Origin': headers['access-control-allow-origin'],
+                        'Access-Control-Allow-Methods': headers['access-control-allow-methods'],
+                        'Access-Control-Allow-Headers': headers['access-control-allow-headers']
+                    }
+                });
+            } catch (error) {
+                displayResult('test5-result', false, null, error.message);
+            }
+        }
+
+        // Auto-run basic connectivity test on page load
+        window.onload = function () {
+            testBasicConnectivity();
+        };
+    </script>
+</body>
+
+</html>
