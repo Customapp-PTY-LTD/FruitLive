@@ -10,9 +10,9 @@
  * @param {boolean} includeAllFarms - Whether to include "All Farms" option
  */
 async function populateFarmSelector(selectorId, selectedFarmId = null, includeAllFarms = true) {
-    const selector = document.getElementById(selectorId);
+    const selector = await waitForElement(selectorId);
     if (!selector) {
-        console.warn(`Farm selector with ID "${selectorId}" not found`);
+        console.warn(`Farm selector with ID "${selectorId}" not found after retries`);
         return;
     }
     
@@ -67,9 +67,9 @@ async function populateFarmSelector(selectorId, selectedFarmId = null, includeAl
  * @param {boolean} includeAllBlocks - Whether to include "All Blocks" option
  */
 async function populateBlockSelector(selectorId, farmId = null, selectedBlockId = null, includeAllBlocks = true) {
-    const selector = document.getElementById(selectorId);
+    const selector = await waitForElement(selectorId);
     if (!selector) {
-        console.warn(`Block selector with ID "${selectorId}" not found`);
+        console.warn(`Block selector with ID "${selectorId}" not found after retries`);
         return;
     }
     
@@ -121,15 +121,33 @@ async function populateBlockSelector(selectorId, farmId = null, selectedBlockId 
 }
 
 /**
+ * Wait for an element to appear in the DOM
+ * @param {string} elementId - ID of the element to wait for
+ * @param {number} maxRetries - Maximum number of retries
+ * @param {number} delay - Delay between retries in milliseconds
+ * @returns {Promise<HTMLElement|null>} The element or null if not found
+ */
+async function waitForElement(elementId, maxRetries = 10, delay = 100) {
+    for (let i = 0; i < maxRetries; i++) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            return element;
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    return null;
+}
+
+/**
  * Populate variety selector dropdown
  * @param {string} selectorId - ID of the select element
  * @param {string|null} selectedVarietyId - ID of variety to select
  * @param {boolean} includeAllVarieties - Whether to include "All Varieties" option
  */
 async function populateVarietySelector(selectorId, selectedVarietyId = null, includeAllVarieties = true) {
-    const selector = document.getElementById(selectorId);
+    const selector = await waitForElement(selectorId);
     if (!selector) {
-        console.warn(`Variety selector with ID "${selectorId}" not found`);
+        console.warn(`Variety selector with ID "${selectorId}" not found after retries`);
         return;
     }
     
