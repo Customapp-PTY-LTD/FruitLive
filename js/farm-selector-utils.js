@@ -4,6 +4,24 @@
  */
 
 /**
+ * Wait for an element to appear in the DOM
+ * @param {string} elementId - ID of the element to wait for
+ * @param {number} maxRetries - Maximum number of retries
+ * @param {number} delay - Delay between retries in milliseconds
+ * @returns {Promise<HTMLElement|null>} The element or null if not found
+ */
+async function waitForElement(elementId, maxRetries = 10, delay = 100) {
+    for (let i = 0; i < maxRetries; i++) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            return element;
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    return null;
+}
+
+/**
  * Populate farm selector dropdown
  * @param {string} selectorId - ID of the select element
  * @param {string|null} selectedFarmId - ID of farm to select (or 'all' for all farms)
@@ -118,24 +136,6 @@ async function populateBlockSelector(selectorId, farmId = null, selectedBlockId 
         console.error('Error populating block selector:', error);
         selector.innerHTML = '<option value="">Error loading blocks</option>';
     }
-}
-
-/**
- * Wait for an element to appear in the DOM
- * @param {string} elementId - ID of the element to wait for
- * @param {number} maxRetries - Maximum number of retries
- * @param {number} delay - Delay between retries in milliseconds
- * @returns {Promise<HTMLElement|null>} The element or null if not found
- */
-async function waitForElement(elementId, maxRetries = 10, delay = 100) {
-    for (let i = 0; i < maxRetries; i++) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            return element;
-        }
-        await new Promise(resolve => setTimeout(resolve, delay));
-    }
-    return null;
 }
 
 /**
