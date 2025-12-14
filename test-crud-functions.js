@@ -3,6 +3,9 @@
  * 
  * Run this in the browser console after logging in to test all CRUD functions.
  * Usage: testAllCRUDFunctions()
+ * 
+ * NOTE: If you see UUID validation errors, do a hard refresh (Ctrl+Shift+R or Cmd+Shift+R)
+ * to clear the browser cache and load the latest JavaScript files.
  */
 
 const CRUDTester = {
@@ -25,7 +28,7 @@ const CRUDTester = {
 
         // Test GET functions with filters
         await this.testFunction('getWorkers', () => dataFunctions.getWorkers({}), 'GET');
-        await this.testFunction('getWorkers with filters', () => dataFunctions.getWorkers({ farmId: 'test' }), 'GET');
+        await this.testFunction('getWorkers with filters', () => dataFunctions.getWorkers({ farmId: 'all', search: 'test', status: 'active' }), 'GET');
         await this.testFunction('getWorkerAllocations', () => dataFunctions.getWorkerAllocations({}), 'GET');
         await this.testFunction('getChemicals', () => dataFunctions.getChemicals({}), 'GET');
         await this.testFunction('getSprayApplications', () => dataFunctions.getSprayApplications({}), 'GET');

@@ -727,7 +727,15 @@ var _dataFunctions = function () {
 
         getWorkers: async function (filters = {}, token = null) {
             const params = {};
-            if (filters.farmId && filters.farmId !== 'all') params.p_farm_id = filters.farmId;
+            // Validate UUID format before adding farmId
+            if (filters.farmId && filters.farmId !== 'all') {
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                if (uuidRegex.test(filters.farmId)) {
+                    params.p_farm_id = filters.farmId;
+                } else {
+                    console.warn('Invalid UUID format for farmId:', filters.farmId);
+                }
+            }
             if (filters.search) params.p_search_term = filters.search;
             if (filters.status) params.p_status = filters.status;
             if (filters.employmentType) params.p_employment_type = filters.employmentType;

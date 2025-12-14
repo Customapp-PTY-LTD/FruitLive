@@ -193,19 +193,28 @@ function loadSummaryStats() {
         general: 42
     };
     
+    // Helper function to safely set text content
+    const setTextContent = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
+        } else {
+            console.warn(`Element with id '${id}' not found`);
+        }
+    };
+    
     // Update totals
-    document.getElementById('totalStaff').textContent = stats.total;
-    document.getElementById('staffBreakdown').textContent = 
-        `${stats.permanent} permanent + ${stats.shared} shared + ${stats.seasonal} seasonal`;
-    document.getElementById('presentCount').textContent = stats.present;
-    document.getElementById('absentCount').textContent = stats.absent;
-    document.getElementById('unallocatedCount').textContent = stats.unallocated;
+    setTextContent('totalStaff', stats.total);
+    setTextContent('staffBreakdown', `${stats.permanent} permanent + ${stats.shared} shared + ${stats.seasonal} seasonal`);
+    setTextContent('presentCount', stats.present);
+    setTextContent('absentCount', stats.absent);
+    setTextContent('unallocatedCount', stats.unallocated);
     
     // Update team counts
-    document.getElementById('pruningCount').textContent = `${stats.pruning} workers`;
-    document.getElementById('mowingCount').textContent = `${stats.mowing} workers`;
-    document.getElementById('weedingCount').textContent = `${stats.weeding} workers`;
-    document.getElementById('generalCount').textContent = `${stats.general} workers`;
+    setTextContent('pruningCount', `${stats.pruning} workers`);
+    setTextContent('mowingCount', `${stats.mowing} workers`);
+    setTextContent('weedingCount', `${stats.weeding} workers`);
+    setTextContent('generalCount', `${stats.general} workers`);
     
     // Show shared workers alert if any
     if (stats.shared > 0) {
