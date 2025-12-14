@@ -1,0 +1,50 @@
+/* Compliance Module Styles */
+.compliance-card {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.compliance-card:hover {
+    transform: translateY(-2px);
+}
+
+.folder-item {
+    border-left: 4px solid var(--primary);
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.folder-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateX(4px);
+}
+
+.cert-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.cert-valid {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.cert-expiring {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.cert-expired {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+

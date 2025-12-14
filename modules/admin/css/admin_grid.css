@@ -1,0 +1,20 @@
+/* Admin Module Styles */
+.farm-card {
+    border-left: 4px solid var(--primary);
+    transition: all 0.2s;
+    margin-bottom: 1rem;
+}
+
+.farm-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateX(4px);
+}
+
+.permission-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+    display: inline-block;
+}
+

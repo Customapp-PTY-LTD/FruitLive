@@ -177,28 +177,46 @@ function loadModules() {
             route: 'labour-grid'
         },
         {
-            icon: 'bi-person-badge',
-            title: 'Users Management',
-            description: 'Manage users, roles, and permissions',
-            route: 'users-grid'
+            icon: 'bi-clipboard-check',
+            title: 'Compliance & Audits',
+            description: 'Global GAP, Caesar audits, training certificates',
+            route: 'compliance-grid'
         },
         {
-            icon: 'bi-shield-lock',
-            title: 'Roles & Permissions',
-            description: 'Configure role-based access control',
-            route: 'roles-grid'
+            icon: 'bi-droplet-fill',
+            title: 'Chemicals',
+            description: 'Spray programs, inventory & compliance',
+            route: 'chemicals-grid'
         },
         {
-            icon: 'bi-toggles',
-            title: 'Role Features',
-            description: 'Manage feature access by role',
-            route: 'role-features-grid'
+            icon: 'bi-graph-up',
+            title: 'Crop Monitoring',
+            description: 'Growth tracking, quality & yield forecasts',
+            route: 'crops-grid'
         },
         {
-            icon: 'bi-key',
-            title: 'Role Permissions',
-            description: 'Configure detailed permissions',
-            route: 'role-permissions-grid'
+            icon: 'bi-truck',
+            title: 'Asset Management',
+            description: 'Vehicles, fuel, equipment & inventory',
+            route: 'assets-grid'
+        },
+        {
+            icon: 'bi-box-seam',
+            title: 'Post-Harvest',
+            description: 'Pack season data, traceability & markets',
+            route: 'postharvest-grid'
+        },
+        {
+            icon: 'bi-water',
+            title: 'Water & Irrigation',
+            description: 'Water usage, pump meters & compliance',
+            route: 'water-grid'
+        },
+        {
+            icon: 'bi-gear-fill',
+            title: 'System Administration',
+            description: 'Farms, users, resources & permissions',
+            route: 'admin-grid'
         }
     ];
     

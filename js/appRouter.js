@@ -249,6 +249,41 @@ var _appRouter = function () {
                         initializeRolePermissionsGrid();
                     }
                 },
+                'compliance-grid': () => {
+                    if (typeof initializeComplianceGrid === 'function') {
+                        initializeComplianceGrid();
+                    }
+                },
+                'chemicals-grid': () => {
+                    if (typeof initializeChemicalsGrid === 'function') {
+                        initializeChemicalsGrid();
+                    }
+                },
+                'crops-grid': () => {
+                    if (typeof initializeCropsGrid === 'function') {
+                        initializeCropsGrid();
+                    }
+                },
+                'assets-grid': () => {
+                    if (typeof initializeAssetsGrid === 'function') {
+                        initializeAssetsGrid();
+                    }
+                },
+                'postharvest-grid': () => {
+                    if (typeof initializePostharvestGrid === 'function') {
+                        initializePostharvestGrid();
+                    }
+                },
+                'water-grid': () => {
+                    if (typeof initializeWaterGrid === 'function') {
+                        initializeWaterGrid();
+                    }
+                },
+                'admin-grid': () => {
+                    if (typeof initializeAdminGrid === 'function') {
+                        initializeAdminGrid();
+                    }
+                },
                 'role-features-grid': () => {
                     if (typeof initializeRoleFeaturesGrid === 'function') {
                         initializeRoleFeaturesGrid();

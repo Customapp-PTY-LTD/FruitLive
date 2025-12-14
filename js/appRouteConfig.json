@@ -90,6 +90,83 @@
             "css": [
                 "css/role-features_grid.css"
             ]
+        },
+        "compliance-grid": {
+            "description": "Compliance & Audits",
+            "path": "compliance",
+            "html": "html/compliance_grid.html",
+            "js": [
+                "js/compliance_grid.js"
+            ],
+            "css": [
+                "css/compliance_grid.css"
+            ]
+        },
+        "chemicals-grid": {
+            "description": "Chemical Management",
+            "path": "chemicals",
+            "html": "html/chemicals_grid.html",
+            "js": [
+                "js/chemicals_grid.js"
+            ],
+            "css": [
+                "css/chemicals_grid.css"
+            ]
+        },
+        "crops-grid": {
+            "description": "Crop Monitoring",
+            "path": "crops",
+            "html": "html/crops_grid.html",
+            "js": [
+                "js/crops_grid.js"
+            ],
+            "css": [
+                "css/crops_grid.css"
+            ]
+        },
+        "assets-grid": {
+            "description": "Asset Management",
+            "path": "assets",
+            "html": "html/assets_grid.html",
+            "js": [
+                "js/assets_grid.js"
+            ],
+            "css": [
+                "css/assets_grid.css"
+            ]
+        },
+        "postharvest-grid": {
+            "description": "Post-Harvest Management",
+            "path": "postharvest",
+            "html": "html/postharvest_grid.html",
+            "js": [
+                "js/postharvest_grid.js"
+            ],
+            "css": [
+                "css/postharvest_grid.css"
+            ]
+        },
+        "water-grid": {
+            "description": "Water & Irrigation",
+            "path": "water",
+            "html": "html/water_grid.html",
+            "js": [
+                "js/water_grid.js"
+            ],
+            "css": [
+                "css/water_grid.css"
+            ]
+        },
+        "admin-grid": {
+            "description": "System Administration",
+            "path": "admin",
+            "html": "html/admin_grid.html",
+            "js": [
+                "js/admin_grid.js"
+            ],
+            "css": [
+                "css/admin_grid.css"
+            ]
         }
     }
 }
