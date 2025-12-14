@@ -39,6 +39,12 @@ var _appRouter = function () {
                            sessionStorage.getItem('lastActivePage') || 
                            '';
 
+            // Check for URL parameter that might override
+            if (typeof _common !== 'undefined' && _common.getUrlParams && _common.getUrlParams().ar) {
+                activePage = '';
+            }
+            
+            // If still no active page, use default route
             if (!activePage) {
                 activePage = _appRouter.defaultRoute;
             }
@@ -46,9 +52,6 @@ var _appRouter = function () {
             // Store in sessionStorage for current session
             if (activePage) {
                 sessionStorage.setItem('lastActivePage', activePage);
-            }
-            if (typeof _common !== 'undefined' && _common.getUrlParams && _common.getUrlParams().ar) {
-                activePage = '';
             }
             const loadContent_result = await _appRouter.loadContent({
                 routeName: activePage,
@@ -194,7 +197,7 @@ var _appRouter = function () {
             const loadCSS_result = await _appRouter.loadCSS(css, resoucePath);
             if (loadCSS_result.errors.length) {
                 result.success = false;
-                result = result.errors.concat(loadCSS_result.errors);
+                result.errors = result.errors.concat(loadCSS_result.errors);
             }
 
             const fetchHtml_result = await _appRouter.fetchHtml(`${resoucePath}/${html}`);
@@ -218,7 +221,12 @@ var _appRouter = function () {
                 console.error('failed to load the following js files', loadJSCode_result.errors);
                 //raise error
                 result.success = false;
-                result = result.errors.concat(loadJSCode_result.errors);
+                result.errors = result.errors.concat(loadJSCode_result.errors);
+            }
+
+            // Set success to true if no errors occurred
+            if (result.errors.length === 0) {
+                result.success = true;
             }
 
             // Initialize module after loading with a small delay to ensure scripts are executed
