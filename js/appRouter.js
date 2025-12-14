@@ -224,6 +224,11 @@ var _appRouter = function () {
 
             // Map route names to module initialization functions
             const moduleInitializers = {
+                'dashboard': () => {
+                    if (typeof initializeDashboard === 'function') {
+                        initializeDashboard();
+                    }
+                },
                 'users-grid': () => {
                     if (typeof initializeUsersGrid === 'function') {
                         initializeUsersGrid();

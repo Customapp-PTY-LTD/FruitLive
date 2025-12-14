@@ -1,6 +1,6 @@
 {
     "basePath": "modules",
-    "defaultRoute": "users-grid",
+    "defaultRoute": "dashboard",
     "contentContainer": "#content-area",
     "environmentSettings": {
         "default": {
@@ -25,6 +25,17 @@
         }
     },
     "appRoutes": {
+        "dashboard": {
+            "description": "Dashboard",
+            "path": "dashboard",
+            "html": "html/dashboard.html",
+            "js": [
+                "js/dashboard.js"
+            ],
+            "css": [
+                "css/dashboard.css"
+            ]
+        },
         "users-grid": {
             "description": "User Management",
             "path": "users",

@@ -1,0 +1,217 @@
+/* Dashboard Module Styles */
+
+:root {
+    --dashboard-primary: #1a4d3e;
+    --dashboard-secondary: #ff7948;
+    --dashboard-accent: #7fa84f;
+    --dashboard-light: #f8f9fa;
+    --dashboard-dark: #4A4A4A;
+}
+
+.dashboard-container {
+    padding: 0;
+}
+
+/* Stats Cards */
+.stat-card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.stat-card .card-header {
+    background: linear-gradient(135deg, var(--dashboard-primary) 0%, #2a6d5e 100%);
+    color: white;
+    border-bottom: none;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+}
+
+.stat-card .card-body {
+    padding: 1.5rem;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dashboard-primary);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
+/* Alert Boxes */
+.alert-warning-custom {
+    background-color: #fff8e6;
+    border-left: 4px solid #ffc107;
+    border-radius: 8px;
+}
+
+.alert-danger-custom {
+    background-color: #ffe6e6;
+    border-left: 4px solid #dc3545;
+    border-radius: 8px;
+}
+
+.alert-info-custom {
+    background-color: #e8f4f3;
+    border-left: 4px solid var(--dashboard-accent);
+    border-radius: 8px;
+}
+
+/* Module Cards */
+.module-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    height: 100%;
+}
+
+.module-card:hover {
+    border-color: var(--dashboard-accent);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(127, 168, 79, 0.15);
+}
+
+.module-icon {
+    font-size: 3.5rem;
+    color: var(--dashboard-accent);
+    transition: transform 0.3s ease;
+}
+
+.module-card:hover .module-icon {
+    transform: scale(1.1);
+}
+
+.module-card .card-title {
+    color: var(--dashboard-primary);
+    font-size: 1.15rem;
+}
+
+.module-card .card-text {
+    font-size: 0.9rem;
+}
+
+/* Buttons */
+.btn-dashboard {
+    background: linear-gradient(135deg, var(--dashboard-primary) 0%, #2a6d5e 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-dashboard:hover {
+    background: linear-gradient(135deg, #153d31 0%, #1f5347 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 77, 62, 0.3);
+}
+
+/* Badge Styles */
+.dashboard-badge-primary {
+    background-color: var(--dashboard-accent);
+    color: white;
+    font-weight: 600;
+}
+
+.dashboard-badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Recent Activity List */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem 0;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1.25rem;
+}
+
+.activity-icon.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.activity-icon.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.activity-icon.warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* Task List */
+.task-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.task-item:last-child {
+    border-bottom: none;
+}
+
+.task-priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+.priority-high {
+    background-color: #dc3545;
+}
+
+.priority-medium {
+    background-color: #ffc107;
+}
+
+.priority-low {
+    background-color: #0dcaf0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stat-value {
+        font-size: 2rem;
+    }
+    
+    .module-icon {
+        font-size: 2.5rem;
+    }
+    
+    .dashboard-container {
+        padding: 0.5rem;
+    }
+}
+
