@@ -34,6 +34,7 @@ const TestDataGenerator = {
             // Generate in dependency order
             await this.generateFarms();
             await this.generateBlocks();
+            // Skip varieties if function doesn't exist - will be handled in generateVarieties
             await this.generateVarieties();
             await this.generateWorkers();
             await this.generateChemicals();
@@ -180,23 +181,56 @@ const TestDataGenerator = {
     async generateVarieties() {
         console.log('🍎 Generating varieties...');
         
+        // First, get crop types to map names to IDs
+        let cropTypeMap = {};
+        try {
+            // Try to get crop types - function may not exist
+            if (typeof dataFunctions.getCropTypes === 'function') {
+                const cropTypes = await dataFunctions.getCropTypes();
+                if (cropTypes && Array.isArray(cropTypes)) {
+                    cropTypes.forEach(ct => {
+                        cropTypeMap[ct.name] = ct.id;
+                    });
+                }
+            } else {
+                console.warn('   ⚠ getCropTypes function not available, skipping variety generation');
+                console.warn('   Note: create_variety_simple function may not exist in database');
+                return;
+            }
+        } catch (error) {
+            console.warn('   ⚠ Could not fetch crop types, skipping variety generation');
+            console.warn('   Note: create_variety_simple function may not exist in database');
+            return;
+        }
+        
+        // Get first farm ID for variety assignment
+        const farmId = this.createdIds.farms.length > 0 ? this.createdIds.farms[0] : null;
+        
         const varieties = [
-            { name: 'Granny Smith', crop_type: 'Apple', season: 'Late' },
-            { name: 'Royal Gala', crop_type: 'Apple', season: 'Early' },
-            { name: 'Pink Lady', crop_type: 'Apple', season: 'Late' },
-            { name: 'Packham', crop_type: 'Pear', season: 'Mid' },
-            { name: 'Forelle', crop_type: 'Pear', season: 'Early' },
-            { name: 'Valencia', crop_type: 'Orange', season: 'Late' },
-            { name: 'Navel', crop_type: 'Orange', season: 'Early' }
+            { name: 'Granny Smith', crop_type: 'Apple', season: 'Late', hectares: 15 },
+            { name: 'Royal Gala', crop_type: 'Apple', season: 'Early', hectares: 12 },
+            { name: 'Pink Lady', crop_type: 'Apple', season: 'Late', hectares: 10 },
+            { name: 'Packham', crop_type: 'Pear', season: 'Mid', hectares: 8 },
+            { name: 'Forelle', crop_type: 'Pear', season: 'Early', hectares: 7 },
+            { name: 'Valencia', crop_type: 'Orange', season: 'Late', hectares: 20 },
+            { name: 'Navel', crop_type: 'Orange', season: 'Early', hectares: 18 }
         ];
 
         for (const variety of varieties) {
             try {
+                // Map crop type name to ID
+                const cropTypeId = cropTypeMap[variety.crop_type];
+                if (!cropTypeId) {
+                    console.warn(`   ⚠ Skipping ${variety.name}: crop type "${variety.crop_type}" not found`);
+                    continue;
+                }
+                
                 const result = await dataFunctions.createVariety({
+                    farm_id: farmId,
                     name: variety.name,
-                    crop_type: variety.crop_type,
-                    season: variety.season,
-                    description: `${variety.season} season ${variety.name} ${variety.crop_type}`
+                    crop_type_id: cropTypeId,
+                    hectares: variety.hectares,
+                    planting_year: 2020 + Math.floor(Math.random() * 5) // 2020-2024
                 });
                 
                 if (result && result.id) {
@@ -215,16 +249,40 @@ const TestDataGenerator = {
     async generateWorkers() {
         console.log('👷 Generating workers...');
         
+        // First, get existing workers to avoid duplicate employee numbers
+        let existingEmployeeNumbers = new Set();
+        try {
+            const existingWorkers = await dataFunctions.getWorkers();
+            if (existingWorkers && Array.isArray(existingWorkers)) {
+                existingWorkers.forEach(w => {
+                    if (w.employee_number) {
+                        existingEmployeeNumbers.add(w.employee_number);
+                    }
+                });
+            }
+        } catch (error) {
+            console.warn('   ⚠ Could not fetch existing workers, continuing...');
+        }
+        
         const firstNames = ['John', 'Sarah', 'Michael', 'Emily', 'David', 'Lisa', 'James', 'Anna', 'Robert', 'Maria'];
         const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
         const idPrefixes = ['900101', '890215', '880330', '910425', '920530', '930615', '940720', '950825'];
+        
+        let employeeCounter = existingEmployeeNumbers.size + 1;
         
         for (let i = 0; i < 30; i++) {
             const firstName = firstNames[i % firstNames.length];
             const lastName = lastNames[Math.floor(i / firstNames.length)];
             const idPrefix = idPrefixes[i % idPrefixes.length];
             const idNumber = `${idPrefix}${String(i).padStart(7, '0')}0${i % 2}`;
-            const employeeNumber = `EMP${String(i + 1).padStart(4, '0')}`;
+            
+            // Generate unique employee number
+            let employeeNumber;
+            do {
+                employeeNumber = `EMP${String(employeeCounter++).padStart(4, '0')}`;
+            } while (existingEmployeeNumbers.has(employeeNumber));
+            
+            existingEmployeeNumbers.add(employeeNumber);
             
             try {
                 const result = await dataFunctions.createWorker({
