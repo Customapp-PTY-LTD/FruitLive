@@ -4,24 +4,24 @@
     "contentContainer": "#content-area",
     "environmentSettings": {
         "default": {
-            "SupabaseUrl": "https://ekgjuvnrzyacoltcypio.supabase.co",
-            "LambdaProxyUrl": "https://r5kwwuprd75nfmnhjtna3hebxy0knpyr.lambda-url.af-south-1.on.aws/proxy/function"
+            "SupabaseUrl": "https://iwxmuemrfopajwvqdiae.supabase.co",
+            "LambdaProxyUrl": "https://snrbpnca2tdilbbypivmxx57qa0xiaea.lambda-url.af-south-1.on.aws/proxy/function"
         },
         "dev": {
-            "SupabaseUrl": "https://ekgjuvnrzyacoltcypio.supabase.co",
-            "LambdaProxyUrl": "https://r5kwwuprd75nfmnhjtna3hebxy0knpyr.lambda-url.af-south-1.on.aws/proxy/function"
+            "SupabaseUrl": "https://iwxmuemrfopajwvqdiae.supabase.co",
+            "LambdaProxyUrl": "https://snrbpnca2tdilbbypivmxx57qa0xiaea.lambda-url.af-south-1.on.aws/proxy/function"
         },
         "uat": {
-            "SupabaseUrl": "https://ekgjuvnrzyacoltcypio.supabase.co",
-            "LambdaProxyUrl": "https://r5kwwuprd75nfmnhjtna3hebxy0knpyr.lambda-url.af-south-1.on.aws/proxy/function"
+            "SupabaseUrl": "https://iwxmuemrfopajwvqdiae.supabase.co",
+            "LambdaProxyUrl": "https://snrbpnca2tdilbbypivmxx57qa0xiaea.lambda-url.af-south-1.on.aws/proxy/function"
         },
         "demo": {
-            "SupabaseUrl": "https://ekgjuvnrzyacoltcypio.supabase.co",
-            "LambdaProxyUrl": "https://r5kwwuprd75nfmnhjtna3hebxy0knpyr.lambda-url.af-south-1.on.aws/proxy/function"
+            "SupabaseUrl": "https://iwxmuemrfopajwvqdiae.supabase.co",
+            "LambdaProxyUrl": "https://snrbpnca2tdilbbypivmxx57qa0xiaea.lambda-url.af-south-1.on.aws/proxy/function"
         },
         "prod": {
-            "SupabaseUrl": "https://ekgjuvnrzyacoltcypio.supabase.co",
-            "LambdaProxyUrl": "https://r5kwwuprd75nfmnhjtna3hebxy0knpyr.lambda-url.af-south-1.on.aws/proxy/function"
+            "SupabaseUrl": "https://iwxmuemrfopajwvqdiae.supabase.co",
+            "LambdaProxyUrl": "https://snrbpnca2tdilbbypivmxx57qa0xiaea.lambda-url.af-south-1.on.aws/proxy/function"
         }
     },
     "appRoutes": {
