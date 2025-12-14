@@ -946,9 +946,6 @@ function showNotification(message, type = 'info') {
         alert(message);
     }
 }
-    console.log(`[${type.toUpperCase()}] ${message}`);
-    // TODO: Implement proper toast notification
-}
 
 // Auto-initialize when loaded via router
 if (typeof window !== 'undefined') {
