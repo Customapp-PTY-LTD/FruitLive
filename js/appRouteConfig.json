@@ -41,6 +41,7 @@
             "path": "labour",
             "html": "html/labour_grid.html",
             "js": [
+                "../../js/farm-selector-utils.js",
                 "js/labour_grid.js"
             ],
             "css": [
