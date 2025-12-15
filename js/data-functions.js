@@ -140,6 +140,13 @@ var _dataFunctions = function () {
                         // If response isn't JSON, use status text
                         errorMessage = response.statusText || errorMessage;
                     }
+                    
+                    // Handle 401 Unauthorized - token expired or invalid
+                    if (response.status === 401) {
+                        const finalMessage = errorMessage || 'Invalid or expired token';
+                        throw new Error(finalMessage);
+                    }
+                    
                     throw new Error(errorMessage);
                 }
 
@@ -803,7 +810,10 @@ var _dataFunctions = function () {
                 p_employment_type: workerData.employment_type || null,
                 p_hire_date: workerData.hire_date || null,
                 p_position: workerData.position || null,
-                p_is_active: workerData.is_active !== undefined ? workerData.is_active : null
+                p_is_active: workerData.is_active !== undefined ? workerData.is_active : null,
+                p_bank_name: workerData.bank_name || null,
+                p_bank_account_number: workerData.bank_account_number || null,
+                p_bank_branch_code: workerData.bank_branch_code || null
             };
             return await this.callFunction('update_worker_simple', params, token);
         },
@@ -831,6 +841,56 @@ var _dataFunctions = function () {
 
         deleteWorkerAllocation: async function (allocationId, token = null) {
             return await this.callFunction('delete_worker_allocation_hard', { p_allocation_id: allocationId }, token);
+        },
+
+        // ===== LABOUR TRANSFER FUNCTIONS =====
+
+        getLabourTransfers: async function (filters = {}, token = null) {
+            // Use direct SQL query since there may not be a function for this
+            // For now, identify shared workers by home_farm_id != current_farm_id
+            const params = {};
+            if (filters.farmId) params.p_farm_id = filters.farmId;
+            if (filters.status) params.p_status = filters.status;
+            // Note: This will need to be implemented as a database function
+            // For now, we'll identify shared workers from worker data
+            return [];
+        },
+
+        getSharedWorkers: async function (filters = {}, token = null) {
+            // Get all workers and filter for shared workers (home_farm_id != current_farm_id)
+            const allWorkers = await this.getWorkers(filters, token);
+            if (!allWorkers || !Array.isArray(allWorkers)) {
+                return [];
+            }
+            
+            // Filter for shared workers
+            const sharedWorkers = allWorkers.filter(worker => {
+                const homeFarmId = worker.home_farm_id || worker.homeFarmId;
+                const currentFarmId = worker.current_farm_id || worker.currentFarmId;
+                return homeFarmId && currentFarmId && homeFarmId !== currentFarmId && worker.is_active !== false;
+            });
+            
+            return sharedWorkers;
+        },
+
+        createLabourTransfer: async function (transferData, token = null) {
+            const params = {
+                p_origin_farm_id: transferData.origin_farm_id || transferData.originFarmId,
+                p_destination_farm_id: transferData.destination_farm_id || transferData.destinationFarmId,
+                p_start_date: transferData.start_date || transferData.startDate,
+                p_end_date: transferData.end_date || transferData.endDate || null,
+                p_notes: transferData.notes || null
+            };
+            // This would need a database function - for now, return placeholder
+            // return await this.callFunction('create_labour_transfer', params, token);
+            throw new Error('Labour transfer creation not yet implemented in database');
+        },
+
+        updateWorkerTransfer: async function (workerId, destinationFarmId, token = null) {
+            // Update worker's current_farm_id to transfer them
+            return await this.updateWorker(workerId, {
+                current_farm_id: destinationFarmId
+            }, token);
         },
 
         // ===== DASHBOARD FUNCTIONS =====
@@ -1313,6 +1373,58 @@ var _dataFunctions = function () {
 
         deleteAudit: async function (auditId, token = null) {
             return await this.callFunction('delete_audit_hard', { p_audit_id: auditId }, token);
+        },
+
+        // ===== POLICIES & PROCEDURES FUNCTIONS =====
+
+        getPolicies: async function (filters = {}, token = null) {
+            const params = {
+                p_farm_id: filters.farmId || null,
+                p_status: filters.status || null,
+                p_category: filters.category || null,
+                p_search_term: filters.search || null
+            };
+            return await this.callFunction('get_policies', params, token);
+        },
+
+        createPolicy: async function (policyData, token = null) {
+            const params = {
+                p_farm_id: policyData.farm_id,
+                p_title: policyData.title,
+                p_policy_number: policyData.policy_number || null,
+                p_version: policyData.version || null,
+                p_category: policyData.category || null,
+                p_description: policyData.description || null,
+                p_file_url: policyData.file_url || null,
+                p_effective_date: policyData.effective_date || null,
+                p_review_date: policyData.review_date || null,
+                p_review_frequency_months: policyData.review_frequency_months || null,
+                p_status: policyData.status || null
+            };
+            return await this.callFunction('create_policy_simple', params, token);
+        },
+
+        updatePolicy: async function (policyId, policyData, token = null) {
+            const params = {
+                p_policy_id: policyId,
+                p_farm_id: policyData.farm_id || null,
+                p_title: policyData.title || null,
+                p_policy_number: policyData.policy_number || null,
+                p_version: policyData.version || null,
+                p_category: policyData.category || null,
+                p_description: policyData.description || null,
+                p_file_url: policyData.file_url || null,
+                p_effective_date: policyData.effective_date || null,
+                p_review_date: policyData.review_date || null,
+                p_review_frequency_months: policyData.review_frequency_months !== undefined ? policyData.review_frequency_months : null,
+                p_status: policyData.status || null,
+                p_is_active: policyData.is_active !== undefined ? policyData.is_active : null
+            };
+            return await this.callFunction('update_policy_simple', params, token);
+        },
+
+        deletePolicy: async function (policyId, token = null) {
+            return await this.callFunction('delete_policy_hard', { p_policy_id: policyId }, token);
         },
 
         // ===== ADMINISTRATION FUNCTIONS (Additional) =====

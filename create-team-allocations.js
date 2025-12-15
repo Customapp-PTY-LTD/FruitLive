@@ -47,20 +47,20 @@ async function createTeamAllocations() {
             const blocks = await dataFunctions.getBlocks({ farmId: farm.id });
             const farmBlocks = blocks && Array.isArray(blocks) ? blocks : [];
             
-            // Distribute workers across task types
-            const workersPerTask = Math.ceil(farmWorkers.length / taskTypes.length);
+            // Randomly distribute workers across task types
+            // Shuffle workers first for randomness
+            const shuffledWorkers = [...farmWorkers].sort(() => Math.random() - 0.5);
             
-            for (let i = 0; i < taskTypes.length; i++) {
-                const taskType = taskTypes[i];
-                const startIdx = i * workersPerTask;
-                const endIdx = Math.min(startIdx + workersPerTask, farmWorkers.length);
-                const taskWorkers = farmWorkers.slice(startIdx, endIdx);
+            for (const worker of shuffledWorkers) {
+                // Randomly assign task type
+                const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)];
                 
-                if (taskWorkers.length === 0) continue;
+                // Get workers for this specific task (just this one worker)
+                const taskWorkers = [worker];
                 
-                // Get a block for this allocation (or null if no blocks)
+                // Get a random block for this allocation (or null if no blocks)
                 const block = farmBlocks.length > 0 
-                    ? farmBlocks[i % farmBlocks.length] 
+                    ? farmBlocks[Math.floor(Math.random() * farmBlocks.length)]
                     : null;
                 
                 // Create allocations for each worker in this team
@@ -74,9 +74,9 @@ async function createTeamAllocations() {
                             block_id: block?.id || null,
                             task_type: taskType,
                             status: 'completed',
-                            hours_worked: 8.0,
-                            start_time: '07:00',
-                            end_time: '16:00'
+                            hours_worked: 8.0 + (Math.random() * 2.0), // Random 8-10 hours
+                            start_time: '07:00', // Could randomize: add random minutes
+                            end_time: '16:00' // Could randomize: add random minutes
                         };
                         
                         const result = await dataFunctions.createWorkerAllocation(allocationData);

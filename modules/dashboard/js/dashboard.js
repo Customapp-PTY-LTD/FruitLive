@@ -10,8 +10,6 @@ let dashboardData = null;
  */
 async function initializeDashboard() {
     try {
-        console.log('Initializing Dashboard Module...');
-        
         // Wait for dataFunctions to be available
         if (typeof waitForDataFunctions === 'function') {
             try {
@@ -51,7 +49,7 @@ async function initializeDashboard() {
         loadStats();
         loadModules();
         loadRecentActivity();
-        loadUpcomingTasks();
+        await loadUpcomingTasks();
     } catch (error) {
         console.error('Error initializing Dashboard:', error);
         // Show user-friendly error message
@@ -99,7 +97,6 @@ async function loadFarmsAndSetupSelector() {
         }
         
         const farmsResponse = await dataFunctions.getFarms();
-        console.log('Dashboard - Farms response:', farmsResponse);
         
         // Handle different response structures
         let farms = farmsResponse;
@@ -115,9 +112,6 @@ async function loadFarmsAndSetupSelector() {
                 farms = [];
             }
         }
-        
-        console.log('Dashboard - Processed farms:', farms);
-        console.log('Dashboard - Farms count:', farms?.length || 0);
         
         if (farms && farms.length > 0) {
             // Clear loading message
@@ -326,25 +320,7 @@ async function loadAlerts() {
         }
     } catch (error) {
         console.error('Error loading alerts:', error);
-        // Fallback to mock data
-        const alerts = [
-            {
-                type: 'danger',
-                icon: 'bi-exclamation-triangle-fill',
-                title: 'Urgent:',
-                message: '3 staff training certificates expire within 7 days.',
-                link: '#',
-                linkText: 'Review now'
-            }
-        ];
-        container.innerHTML = alerts.map(alert => `
-            <div class="col-12">
-                <div class="alert alert-${alert.type}-custom" role="alert">
-                    <strong><i class="bi ${alert.icon} me-2"></i>${alert.title}</strong> 
-                    ${alert.message} <a href="${alert.link}" class="alert-link">${alert.linkText}</a>
-                </div>
-            </div>
-        `).join('');
+        container.innerHTML = '<div class="col-12"><div class="alert alert-warning">Unable to load alerts. Please try again later.</div></div>';
     }
 }
 
@@ -407,46 +383,7 @@ async function loadStats() {
         `).join('');
     } catch (error) {
         console.error('Error loading stats:', error);
-        // Fallback to mock data
-        const stats = [
-            {
-                icon: 'bi-people-fill',
-                title: 'Active Workers',
-                value: '147',
-                label: 'workers today'
-            },
-            {
-                icon: 'bi-cash-stack',
-                title: 'Labour Cost',
-                value: statsData?.labour_cost_week ? `R${parseFloat(statsData.labour_cost_week).toLocaleString('en-ZA', {minimumFractionDigits: 0, maximumFractionDigits: 0})}` : 'N/A',
-                label: 'this week'
-            },
-            {
-                icon: 'bi-clipboard-check',
-                title: 'Compliance Score',
-                value: '94%',
-                label: 'Global GAP ready'
-            },
-            {
-                icon: 'bi-droplet-fill',
-                title: 'Spray Schedule',
-                value: '3',
-                label: 'applications due this week'
-            }
-        ];
-        container.innerHTML = stats.map(stat => `
-            <div class="col-md-6 col-lg-3">
-                <div class="card stat-card">
-                    <div class="card-header">
-                        <i class="bi ${stat.icon} me-2"></i>${stat.title}
-                    </div>
-                    <div class="card-body text-center">
-                        <div class="stat-value">${stat.value}</div>
-                        <small class="stat-label">${stat.label}</small>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        container.innerHTML = '<div class="col-12"><div class="alert alert-warning">Unable to load statistics. Please try again later.</div></div>';
     }
 }
 
@@ -600,36 +537,41 @@ function formatTimeAgo(timestamp) {
 /**
  * Load and display upcoming tasks
  */
-function loadUpcomingTasks() {
+async function loadUpcomingTasks() {
     const container = document.getElementById('upcomingTasksList');
     if (!container) return;
     
-    // Mock tasks data
-    const tasks = [
-        {
-            priority: 'high',
-            title: 'Review user permissions',
-            dueDate: 'Due: 20 Dec 2025'
-        },
-        {
-            priority: 'medium',
-            title: 'Update role configurations',
-            dueDate: 'Scheduled: 22 Dec 2025'
-        },
-        {
-            priority: 'low',
-            title: 'System backup verification',
-            dueDate: 'Due: 02 Jan 2026'
+    try {
+        if (typeof dataFunctions === 'undefined' || !dataFunctions.getUpcomingTasks) {
+            console.error('dataFunctions.getUpcomingTasks is not available');
+            container.innerHTML = '<li class="text-center text-muted py-4"><p>Unable to load tasks</p></li>';
+            return;
         }
-    ];
-    
-    container.innerHTML = tasks.map(task => `
-        <li class="task-item">
-            <span class="task-priority-dot priority-${task.priority}"></span>
-            <strong>${task.title}</strong>
-            <br><small class="text-muted">${task.dueDate}</small>
-        </li>
-    `).join('');
+        
+        // Pass null for "All Farms" view, otherwise pass the farm ID
+        const farmId = dashboardData?.farm?.id || null;
+        const tasks = await dataFunctions.getUpcomingTasks(farmId, 5);
+        
+        if (tasks && tasks.length > 0) {
+            container.innerHTML = tasks.map(task => {
+                const priority = task.priority || 'medium';
+                const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No due date';
+                
+                return `
+                    <li class="task-item">
+                        <span class="task-priority-dot priority-${priority}"></span>
+                        <strong>${task.title || 'Task'}</strong>
+                        <br><small class="text-muted">Due: ${dueDate}</small>
+                    </li>
+                `;
+            }).join('');
+        } else {
+            container.innerHTML = '<li class="text-center text-muted py-4"><p>No upcoming tasks</p></li>';
+        }
+    } catch (error) {
+        console.error('Error loading upcoming tasks:', error);
+        container.innerHTML = '<li class="text-center text-muted py-4"><p>Unable to load tasks</p></li>';
+    }
 }
 
 /**
@@ -637,8 +579,6 @@ function loadUpcomingTasks() {
  * Make this function globally accessible
  */
 window.navigateToModule = function navigateToModule(routeName) {
-    console.log('Navigating to module:', routeName);
-    
     // Use appRouter if available
     if (typeof _appRouter !== 'undefined' && _appRouter.routeTo) {
         // Use routeTo method if available (preferred)
@@ -697,6 +637,6 @@ function showErrorMessage(message) {
 
 // Auto-initialize when loaded via router
 if (typeof window !== 'undefined') {
-    console.log('Dashboard module script loaded');
+    // Module loaded and ready
 }
 

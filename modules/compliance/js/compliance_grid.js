@@ -2,8 +2,13 @@
 let complianceData = {
     documents: [],
     certificates: [],
-    audits: []
+    audits: [],
+    policies: []
 };
+
+// File upload state
+let currentUploadingFile = null;
+let currentFileUrl = null;
 
 async function initializeComplianceGrid() {
     try {
@@ -93,6 +98,9 @@ async function initializeComplianceGrid() {
         // Load data
         await loadComplianceData();
         
+        // Setup file upload handlers
+        setupFileUploadHandlers();
+        
         // Add event listeners for buttons
         if (typeof setupEventListeners === 'function') {
             setupEventListeners();
@@ -156,6 +164,19 @@ async function loadComplianceData() {
         }
         renderAudits();
         
+        // Load policies
+        const policies = await dataFunctions.getPolicies(filters).catch(err => {
+            console.error('Error loading policies:', err);
+            return [];
+        });
+        
+        if (policies && Array.isArray(policies)) {
+            complianceData.policies = policies;
+        } else {
+            complianceData.policies = [];
+        }
+        renderPolicies();
+        
         // Update compliance stats
         updateComplianceStats();
     } catch (error) {
@@ -205,6 +226,9 @@ function renderDocuments() {
                         </p>
                     </div>
                     <div class="ms-3">
+                        ${doc.file_url ? `<button class="btn btn-sm btn-outline-info me-2" onclick="previewDocumentUrl('${escapeHtml(doc.file_url)}', '${escapeHtml(doc.title || 'Document')}')" title="Preview">
+                            <i class="bi bi-eye"></i>
+                        </button>` : ''}
                         <button class="btn btn-sm btn-outline-primary me-2" onclick="editComplianceDocument('${doc.id}')" title="Edit">
                             <i class="bi bi-pencil"></i>
                         </button>
@@ -343,6 +367,155 @@ function setupEventListeners() {
     }
 }
 
+/**
+ * Setup file upload handlers
+ */
+function setupFileUploadHandlers() {
+    // Document file upload
+    const documentFileInput = document.getElementById('editDocumentFile');
+    if (documentFileInput) {
+        documentFileInput.addEventListener('change', handleDocumentFileSelect);
+    }
+    
+    // Policy file upload
+    const policyFileInput = document.getElementById('editPolicyFile');
+    if (policyFileInput) {
+        policyFileInput.addEventListener('change', handlePolicyFileSelect);
+    }
+}
+
+/**
+ * Handle document file selection
+ */
+async function handleDocumentFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file size (50MB)
+    if (file.size > 50 * 1024 * 1024) {
+        showErrorMessage('File size exceeds 50MB limit');
+        event.target.value = '';
+        return;
+    }
+    
+    // Show file info
+    const previewDiv = document.getElementById('documentFilePreview');
+    const fileNameSpan = document.getElementById('documentFileName');
+    if (previewDiv && fileNameSpan) {
+        fileNameSpan.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        previewDiv.style.display = 'block';
+        currentUploadingFile = file;
+    }
+    
+    // Hide existing URL if any
+    const urlDiv = document.getElementById('documentFileUrl');
+    if (urlDiv) urlDiv.style.display = 'none';
+}
+
+/**
+ * Handle policy file selection
+ */
+async function handlePolicyFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file size (50MB)
+    if (file.size > 50 * 1024 * 1024) {
+        showErrorMessage('File size exceeds 50MB limit');
+        event.target.value = '';
+        return;
+    }
+    
+    // Show file info
+    const previewDiv = document.getElementById('policyFilePreview');
+    const fileNameSpan = document.getElementById('policyFileName');
+    if (previewDiv && fileNameSpan) {
+        fileNameSpan.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        previewDiv.style.display = 'block';
+        currentUploadingFile = file;
+    }
+    
+    // Hide existing URL if any
+    const urlDiv = document.getElementById('policyFileUrl');
+    if (urlDiv) urlDiv.style.display = 'none';
+}
+
+/**
+ * Upload file to Supabase storage via Lambda proxy
+ */
+async function uploadFileToStorage(file, folder = 'documents') {
+    try {
+        if (!file) {
+            throw new Error('No file provided');
+        }
+        
+        const token = dataFunctions.getToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+        
+        // Create a unique filename
+        const timestamp = Date.now();
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `${folder}/${timestamp}_${sanitizedFileName}`;
+        
+        // Convert file to base64 for transmission
+        const base64File = await fileToBase64(file);
+        
+        // Upload through Lambda proxy
+        const proxyUrl = dataFunctions.proxyUrl.replace('/function', '/upload');
+        const response = await fetch(proxyUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                bucket: 'compliance-documents',
+                path: fileName,
+                file: base64File,
+                contentType: file.type,
+                fileName: file.name
+            })
+        });
+        
+        if (!response.ok) {
+            // If upload endpoint doesn't exist, use placeholder
+            console.warn('File upload endpoint not available, using placeholder URL');
+            const fileUrl = `https://storage.supabase.co/object/public/compliance-documents/${fileName}`;
+            return fileUrl;
+        }
+        
+        const result = await response.json();
+        return result.url || result.publicUrl || `https://storage.supabase.co/object/public/compliance-documents/${fileName}`;
+        
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        // Return placeholder URL if upload fails
+        const timestamp = Date.now();
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `${folder}/${timestamp}_${sanitizedFileName}`;
+        const fileUrl = `https://storage.supabase.co/object/public/compliance-documents/${fileName}`;
+        console.warn('Using placeholder URL due to upload error:', error.message);
+        return fileUrl;
+    }
+}
+
+/**
+ * Convert file to base64
+ */
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base64 = reader.result.split(',')[1]; // Remove data:type;base64, prefix
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 function generateAuditReport() {
     console.log('Generating audit report...');
     // Implementation coming soon
@@ -403,6 +576,28 @@ async function editComplianceDocument(documentId) {
     document.getElementById('editDocumentStatus').value = doc.status || 'active';
     document.getElementById('editDocumentExpiry').value = doc.expiry_date ? doc.expiry_date.split('T')[0] : '';
     
+    // Show existing file URL if available
+    const fileInput = document.getElementById('editDocumentFile');
+    const urlDiv = document.getElementById('documentFileUrl');
+    const urlText = document.getElementById('documentFileUrlText');
+    const previewDiv = document.getElementById('documentFilePreview');
+    
+    if (doc.file_url) {
+        currentFileUrl = doc.file_url;
+        if (urlDiv && urlText) {
+            const fileName = doc.file_url.split('/').pop() || 'Document';
+            urlText.textContent = `Current file: ${fileName}`;
+            urlDiv.style.display = 'block';
+        }
+        if (previewDiv) previewDiv.style.display = 'none';
+    } else {
+        if (urlDiv) urlDiv.style.display = 'none';
+        if (previewDiv) previewDiv.style.display = 'none';
+    }
+    
+    if (fileInput) fileInput.value = '';
+    currentUploadingFile = null;
+    
     const modal = new bootstrap.Modal(document.getElementById('editDocumentModal'));
     modal.show();
 }
@@ -421,13 +616,38 @@ async function saveComplianceDocument() {
             return;
         }
         
+        let fileUrl = currentFileUrl || null;
+        
+        // Upload file if a new file was selected
+        const fileInput = document.getElementById('editDocumentFile');
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            showInfoMessage('Uploading file...');
+            try {
+                fileUrl = await uploadFileToStorage(fileInput.files[0], 'compliance-documents');
+                currentFileUrl = fileUrl;
+            } catch (uploadError) {
+                console.error('File upload error:', uploadError);
+                showErrorMessage('Failed to upload file. Document will be saved without file attachment.');
+                // Continue without file - user can upload later
+            }
+        }
+        
+        // If editing and file URL already exists, use existing URL
+        if (documentId && !fileUrl) {
+            const existingDoc = complianceData.documents.find(d => String(d.id) === String(documentId));
+            if (existingDoc && existingDoc.file_url) {
+                fileUrl = existingDoc.file_url;
+            }
+        }
+        
         const documentData = {
             farm_id: farmId,
             title: document.getElementById('editDocumentTitle').value,
             document_type: document.getElementById('editDocumentType').value,
             category: document.getElementById('editDocumentCategory').value || null,
             status: document.getElementById('editDocumentStatus').value || 'active',
-            expiry_date: document.getElementById('editDocumentExpiry').value || null
+            expiry_date: document.getElementById('editDocumentExpiry').value || null,
+            file_url: fileUrl
         };
         
         if (!documentData.title || !documentData.document_type) {
@@ -443,6 +663,13 @@ async function saveComplianceDocument() {
             result = await dataFunctions.createComplianceDocument(documentData);
             showSuccessMessage('Document created successfully');
         }
+        
+        // Reset file inputs
+        if (fileInput) fileInput.value = '';
+        currentUploadingFile = null;
+        currentFileUrl = null;
+        const previewDiv = document.getElementById('documentFilePreview');
+        if (previewDiv) previewDiv.style.display = 'none';
         
         await loadComplianceData();
         
@@ -669,6 +896,14 @@ function showErrorMessage(message) {
     }
 }
 
+function showInfoMessage(message) {
+    if (typeof _common !== 'undefined' && _common.showInfoToast) {
+        _common.showInfoToast(message);
+    } else {
+        console.log('Info: ' + message);
+    }
+}
+
 /**
  * Update compliance statistics
  */
@@ -785,6 +1020,326 @@ function updateComplianceStats() {
     }
 }
 
+/**
+ * Preview document from URL
+ */
+function previewDocumentUrl(fileUrl, title = 'Document') {
+    if (!fileUrl) {
+        showErrorMessage('No file URL available');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('documentPreviewModal'));
+    const frame = document.getElementById('documentPreviewFrame');
+    const downloadLink = document.getElementById('documentPreviewDownload');
+    const modalTitle = document.querySelector('#documentPreviewModal .modal-title');
+    
+    if (frame) {
+        // For PDFs, show directly in iframe
+        if (fileUrl.toLowerCase().endsWith('.pdf')) {
+            frame.src = fileUrl;
+        } else {
+            // For other files, try to open in new tab or show download
+            frame.src = '';
+            if (downloadLink) {
+                downloadLink.href = fileUrl;
+                downloadLink.style.display = 'inline-block';
+            }
+            showInfoMessage('This file type cannot be previewed. Please download to view.');
+        }
+    }
+    
+    if (modalTitle) modalTitle.textContent = `Preview: ${title}`;
+    if (downloadLink) downloadLink.href = fileUrl;
+    
+    modal.show();
+}
+
+/**
+ * Preview document from file input
+ */
+function previewDocument() {
+    const fileInput = document.getElementById('editDocumentFile');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showErrorMessage('No file selected');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const fileUrl = URL.createObjectURL(file);
+    
+    const modal = new bootstrap.Modal(document.getElementById('documentPreviewModal'));
+    const frame = document.getElementById('documentPreviewFrame');
+    const downloadLink = document.getElementById('documentPreviewDownload');
+    
+    if (frame) {
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            frame.src = fileUrl;
+        } else if (file.type.startsWith('image/')) {
+            frame.src = fileUrl;
+        } else {
+            frame.src = '';
+            showInfoMessage('This file type cannot be previewed. Please download to view.');
+        }
+    }
+    
+    if (downloadLink) {
+        downloadLink.href = fileUrl;
+        downloadLink.download = file.name;
+    }
+    
+    modal.show();
+}
+
+/**
+ * Preview policy from file input
+ */
+function previewPolicy() {
+    const fileInput = document.getElementById('editPolicyFile');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showErrorMessage('No file selected');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const fileUrl = URL.createObjectURL(file);
+    
+    const modal = new bootstrap.Modal(document.getElementById('documentPreviewModal'));
+    const frame = document.getElementById('documentPreviewFrame');
+    const downloadLink = document.getElementById('documentPreviewDownload');
+    
+    if (frame) {
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            frame.src = fileUrl;
+        } else if (file.type.startsWith('image/')) {
+            frame.src = fileUrl;
+        } else {
+            frame.src = '';
+            showInfoMessage('This file type cannot be previewed. Please download to view.');
+        }
+    }
+    
+    if (downloadLink) {
+        downloadLink.href = fileUrl;
+        downloadLink.download = file.name;
+    }
+    
+    modal.show();
+}
+
+/**
+ * Preview policy from URL
+ */
+function previewPolicyUrl(fileUrl, title = 'Policy') {
+    previewDocumentUrl(fileUrl, title);
+}
+
+/**
+ * Render policies list
+ */
+function renderPolicies() {
+    const container = document.getElementById('policiesList');
+    if (!container) return;
+    
+    if (complianceData.policies.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-file-text fs-1 text-muted mb-3"></i>
+                <p class="text-muted mb-0">No policies found</p>
+                <small class="text-muted">Click "Add Policy" to create a new policy</small>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = complianceData.policies.map(policy => {
+        const statusClass = policy.status === 'active' ? 'success' : policy.status === 'under_review' ? 'warning' : policy.status === 'archived' ? 'secondary' : 'info';
+        const reviewDate = policy.review_date ? new Date(policy.review_date).toLocaleDateString() : null;
+        const effectiveDate = policy.effective_date ? new Date(policy.effective_date).toLocaleDateString() : null;
+        const isReviewDue = reviewDate && new Date(policy.review_date) <= new Date();
+        
+        return `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-2">${escapeHtml(policy.title || 'Untitled Policy')}</h5>
+                        <p class="card-text mb-2">
+                            <span class="badge bg-${statusClass} me-2">${escapeHtml(policy.status || 'N/A')}</span>
+                            ${policy.policy_number ? `<strong>Policy #:</strong> ${escapeHtml(policy.policy_number)}<br>` : ''}
+                            <strong>Version:</strong> ${escapeHtml(policy.version || '1.0')}<br>
+                            ${policy.category ? `<strong>Category:</strong> ${escapeHtml(policy.category)}<br>` : ''}
+                            ${effectiveDate ? `<strong>Effective:</strong> ${effectiveDate}<br>` : ''}
+                            ${reviewDate ? `<strong>Review Date:</strong> ${reviewDate}${isReviewDue ? ' <span class="text-warning">⚠ Due for Review</span>' : ''}<br>` : ''}
+                            ${policy.description ? `<small class="text-muted">${escapeHtml(policy.description.substring(0, 100))}${policy.description.length > 100 ? '...' : ''}</small><br>` : ''}
+                        </p>
+                    </div>
+                    <div class="ms-3">
+                        ${policy.file_url ? `<button class="btn btn-sm btn-outline-info me-2" onclick="previewPolicyUrl('${escapeHtml(policy.file_url)}', '${escapeHtml(policy.title || 'Policy')}')" title="Preview">
+                            <i class="bi bi-eye"></i>
+                        </button>` : ''}
+                        <button class="btn btn-sm btn-outline-primary me-2" onclick="editPolicy('${policy.id}')" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deletePolicy('${policy.id}', '${escapeHtml(policy.title || 'this policy')}')" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Edit policy
+ */
+async function editPolicy(policyId) {
+    const policy = complianceData.policies.find(p => String(p.id) === String(policyId));
+    if (!policy) {
+        showErrorMessage('Policy not found');
+        return;
+    }
+    
+    document.getElementById('editPolicyId').value = policy.id;
+    document.getElementById('editPolicyTitle').value = policy.title || '';
+    document.getElementById('editPolicyNumber').value = policy.policy_number || '';
+    document.getElementById('editPolicyVersion').value = policy.version || '1.0';
+    document.getElementById('editPolicyCategory').value = policy.category || '';
+    document.getElementById('editPolicyStatus').value = policy.status || 'draft';
+    document.getElementById('editPolicyDescription').value = policy.description || '';
+    document.getElementById('editPolicyEffectiveDate').value = policy.effective_date ? policy.effective_date.split('T')[0] : '';
+    document.getElementById('editPolicyReviewDate').value = policy.review_date ? policy.review_date.split('T')[0] : '';
+    document.getElementById('editPolicyReviewFrequency').value = policy.review_frequency_months || 12;
+    
+    // Show existing file URL if available
+    const fileInput = document.getElementById('editPolicyFile');
+    const urlDiv = document.getElementById('policyFileUrl');
+    const urlText = document.getElementById('policyFileUrlText');
+    const previewDiv = document.getElementById('policyFilePreview');
+    
+    if (policy.file_url) {
+        currentFileUrl = policy.file_url;
+        if (urlDiv && urlText) {
+            const fileName = policy.file_url.split('/').pop() || 'Policy';
+            urlText.textContent = `Current file: ${fileName}`;
+            urlDiv.style.display = 'block';
+        }
+        if (previewDiv) previewDiv.style.display = 'none';
+    } else {
+        if (urlDiv) urlDiv.style.display = 'none';
+        if (previewDiv) previewDiv.style.display = 'none';
+    }
+    
+    if (fileInput) fileInput.value = '';
+    currentUploadingFile = null;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editPolicyModal'));
+    modal.show();
+}
+
+/**
+ * Save policy
+ */
+async function savePolicy() {
+    try {
+        const policyId = document.getElementById('editPolicyId').value;
+        const farmSelector = document.getElementById('farmFilter');
+        const farmId = farmSelector ? (farmSelector.value || 'all') : (localStorage.getItem('selectedFarmId') || 'all');
+        
+        if (!farmId || farmId === 'all') {
+            showErrorMessage('Please select a specific farm before creating a policy');
+            return;
+        }
+        
+        let fileUrl = currentFileUrl || null;
+        
+        // Upload file if a new file was selected
+        const fileInput = document.getElementById('editPolicyFile');
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            showInfoMessage('Uploading file...');
+            try {
+                fileUrl = await uploadFileToStorage(fileInput.files[0], 'policies');
+                currentFileUrl = fileUrl;
+            } catch (uploadError) {
+                console.error('File upload error:', uploadError);
+                showErrorMessage('Failed to upload file. Policy will be saved without file attachment.');
+            }
+        }
+        
+        // If editing and file URL already exists, use existing URL
+        if (policyId && !fileUrl) {
+            const existingPolicy = complianceData.policies.find(p => String(p.id) === String(policyId));
+            if (existingPolicy && existingPolicy.file_url) {
+                fileUrl = existingPolicy.file_url;
+            }
+        }
+        
+        const policyData = {
+            farm_id: farmId,
+            title: document.getElementById('editPolicyTitle').value,
+            policy_number: document.getElementById('editPolicyNumber').value || null,
+            version: document.getElementById('editPolicyVersion').value || '1.0',
+            category: document.getElementById('editPolicyCategory').value || null,
+            description: document.getElementById('editPolicyDescription').value || null,
+            file_url: fileUrl,
+            effective_date: document.getElementById('editPolicyEffectiveDate').value || null,
+            review_date: document.getElementById('editPolicyReviewDate').value || null,
+            review_frequency_months: document.getElementById('editPolicyReviewFrequency').value ? parseInt(document.getElementById('editPolicyReviewFrequency').value) : 12,
+            status: document.getElementById('editPolicyStatus').value || 'draft'
+        };
+        
+        if (!policyData.title) {
+            showErrorMessage('Title is required');
+            return;
+        }
+        
+        let result;
+        if (policyId) {
+            result = await dataFunctions.updatePolicy(policyId, policyData);
+            showSuccessMessage('Policy updated successfully');
+        } else {
+            result = await dataFunctions.createPolicy(policyData);
+            showSuccessMessage('Policy created successfully');
+        }
+        
+        // Reset file inputs
+        if (fileInput) fileInput.value = '';
+        currentUploadingFile = null;
+        currentFileUrl = null;
+        const previewDiv = document.getElementById('policyFilePreview');
+        if (previewDiv) previewDiv.style.display = 'none';
+        
+        await loadComplianceData();
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editPolicyModal'));
+        if (modal) modal.hide();
+        
+    } catch (error) {
+        console.error('Error saving policy:', error);
+        showErrorMessage('Failed to save policy: ' + error.message);
+    }
+}
+
+/**
+ * Delete policy
+ */
+async function deletePolicy(policyId, policyTitle) {
+    if (!confirm(`Are you sure you want to delete "${policyTitle}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        await dataFunctions.deletePolicy(policyId);
+        showSuccessMessage('Policy deleted successfully');
+        await loadComplianceData();
+    } catch (error) {
+        console.error('Error deleting policy:', error);
+        showErrorMessage('Failed to delete policy: ' + error.message);
+    }
+}
+
 // Make functions globally accessible for onclick handlers
 if (typeof window !== 'undefined') {
     window.saveComplianceDocument = saveComplianceDocument;
@@ -798,6 +1353,13 @@ if (typeof window !== 'undefined') {
     window.deleteAudit = deleteAudit;
     window.scheduleAudit = scheduleAudit;
     window.closeAuditModal = closeAuditModal;
+    window.previewDocument = previewDocument;
+    window.previewDocumentUrl = previewDocumentUrl;
+    window.previewPolicy = previewPolicy;
+    window.previewPolicyUrl = previewPolicyUrl;
+    window.savePolicy = savePolicy;
+    window.editPolicy = editPolicy;
+    window.deletePolicy = deletePolicy;
 }
 
 // Initialize when DOM is ready

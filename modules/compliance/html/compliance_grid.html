@@ -160,10 +160,17 @@
         <div class="tab-pane fade" id="policies" role="tabpanel">
             <div class="card">
                 <div class="card-header bg-white">
-                    <h5 class="mb-0 fw-bold">Policies & Procedures</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">Policies & Procedures</h5>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editPolicyModal" onclick="document.getElementById('editPolicyId').value = ''">
+                            <i class="bi bi-plus-lg me-1"></i>Add Policy
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Policy management coming soon...</p>
+                    <div id="policiesList">
+                        <p class="text-muted">Loading policies...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -204,11 +211,34 @@
                             <label class="form-label">Expiry Date</label>
                             <input type="date" class="form-control" id="editDocumentExpiry">
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Document File</label>
+                            <input type="file" class="form-control" id="editDocumentFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
+                            <small class="text-muted">Max file size: 50MB. Supported formats: PDF, Word, Excel, Images</small>
+                            <div id="documentFilePreview" class="mt-2" style="display: none;">
+                                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                    <span id="documentFileName"></span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewDocument()">
+                                        <i class="bi bi-eye me-1"></i>Preview
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="documentFileUrl" class="mt-2" style="display: none;">
+                                <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                    <span id="documentFileUrlText"></span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewDocumentUrl()">
+                                        <i class="bi bi-eye me-1"></i>Preview
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveComplianceDocument()">Save Document</button>
+                    <button type="button" class="btn btn-primary" onclick="saveComplianceDocument()">
+                        <i class="bi bi-upload me-1"></i>Save Document
+                    </button>
                 </div>
             </div>
         </div>
@@ -308,6 +338,120 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeAuditModal()">Cancel</button>
                     <button type="button" class="btn btn-primary" onclick="saveAudit()">Save Audit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Policy Modal -->
+    <div class="modal fade" id="editPolicyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add/Edit Policy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editPolicyId" value="">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editPolicyTitle" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Policy Number</label>
+                            <input type="text" class="form-control" id="editPolicyNumber">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Version</label>
+                            <input type="text" class="form-control" id="editPolicyVersion" value="1.0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="editPolicyCategory">
+                                <option value="">Select Category</option>
+                                <option value="Health & Safety">Health & Safety</option>
+                                <option value="Environmental">Environmental</option>
+                                <option value="Quality Assurance">Quality Assurance</option>
+                                <option value="Food Safety">Food Safety</option>
+                                <option value="HR & Employment">HR & Employment</option>
+                                <option value="Emergency Procedures">Emergency Procedures</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editPolicyStatus">
+                                <option value="draft">Draft</option>
+                                <option value="active">Active</option>
+                                <option value="under_review">Under Review</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Effective Date</label>
+                            <input type="date" class="form-control" id="editPolicyEffectiveDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Review Date</label>
+                            <input type="date" class="form-control" id="editPolicyReviewDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Review Frequency (Months)</label>
+                            <input type="number" class="form-control" id="editPolicyReviewFrequency" value="12" min="1">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="editPolicyDescription" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Policy File</label>
+                            <input type="file" class="form-control" id="editPolicyFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
+                            <small class="text-muted">Max file size: 50MB. Supported formats: PDF, Word, Excel, Images</small>
+                            <div id="policyFilePreview" class="mt-2" style="display: none;">
+                                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                    <span id="policyFileName"></span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewPolicy()">
+                                        <i class="bi bi-eye me-1"></i>Preview
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="policyFileUrl" class="mt-2" style="display: none;">
+                                <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                    <span id="policyFileUrlText"></span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewPolicyUrl()">
+                                        <i class="bi bi-eye me-1"></i>Preview
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="savePolicy()">
+                        <i class="bi bi-upload me-1"></i>Save Policy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Preview Modal -->
+    <div class="modal fade" id="documentPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Document Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <iframe id="documentPreviewFrame" src="" style="width: 100%; height: 70vh; border: none;"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <a id="documentPreviewDownload" href="" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-download me-1"></i>Download
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

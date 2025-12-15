@@ -5,7 +5,7 @@ let cropsData = {
 
 async function initializeCropsGrid() {
     try {
-        console.log('Crops Grid initialized');
+    console.log('Crops Grid initialized');
         
         // Wait for dataFunctions to be available
         if (typeof waitForDataFunctions === 'function') {
@@ -27,29 +27,29 @@ async function initializeCropsGrid() {
             console.error('populateFarmSelector is not defined. Make sure farm-selector-utils.js is loaded.');
             return;
         }
-        
-        // Load and populate farm, block, and variety selectors
+    
+    // Load and populate farm, block, and variety selectors
         try {
-            await populateFarmSelector('farmFilter', localStorage.getItem('selectedFarmId') || 'all', true);
-            await populateBlockSelector('blockFilter', null, null, true);
+    await populateFarmSelector('farmFilter', localStorage.getItem('selectedFarmId') || 'all', true);
+    await populateBlockSelector('blockFilter', null, null, true);
             if (typeof populateVarietySelector === 'function') {
-                await populateVarietySelector('varietyFilter', null, true);
+    await populateVarietySelector('varietyFilter', null, true);
             }
-            
-            // Setup farm selector to update block selector when changed
+    
+    // Setup farm selector to update block selector when changed
             if (typeof setupFarmSelectorWithBlocks === 'function') {
-                setupFarmSelectorWithBlocks('farmFilter', 'blockFilter', (farmId) => {
-                    // Reload data when farm changes
+    setupFarmSelectorWithBlocks('farmFilter', 'blockFilter', (farmId) => {
+        // Reload data when farm changes
                     loadFruitMeasurements().catch(err => {
                         console.error('Error reloading measurements:', err);
                     });
-                });
+    });
             }
         } catch (error) {
             console.error('Error setting up selectors:', error);
         }
-        
-        await loadFruitMeasurements();
+    
+    await loadFruitMeasurements();
     } catch (error) {
         console.error('Error initializing Crops Grid:', error);
     }
@@ -94,13 +94,13 @@ function renderMeasurements() {
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
-                        <h5 class="card-title">Measurement - ${new Date(meas.measurement_date).toLocaleDateString()}</h5>
+                <h5 class="card-title">Measurement - ${new Date(meas.measurement_date).toLocaleDateString()}</h5>
                         <p class="card-text mb-2">
-                            <strong>Days After Bloom:</strong> ${meas.days_after_full_bloom || 'N/A'}<br>
-                            <strong>Sample Size:</strong> ${meas.sample_size || 'N/A'}<br>
-                            <strong>Avg Circumference:</strong> ${meas.circumference_avg || 'N/A'} mm<br>
-                            <strong>Avg Weight:</strong> ${meas.weight_avg || 'N/A'} g
-                        </p>
+                    <strong>Days After Bloom:</strong> ${meas.days_after_full_bloom || 'N/A'}<br>
+                    <strong>Sample Size:</strong> ${meas.sample_size || 'N/A'}<br>
+                    <strong>Avg Circumference:</strong> ${meas.circumference_avg || 'N/A'} mm<br>
+                    <strong>Avg Weight:</strong> ${meas.weight_avg || 'N/A'} g
+                </p>
                     </div>
                     <div class="ms-3">
                         <button class="btn btn-sm btn-outline-primary me-2" onclick="editFruitMeasurement('${meas.id}')" title="Edit">
