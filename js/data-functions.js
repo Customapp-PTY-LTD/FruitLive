@@ -1248,6 +1248,15 @@ var _dataFunctions = function () {
 
         // ===== COMPLIANCE FUNCTIONS =====
 
+        getDocuments: async function (representativeId = null, token = null) {
+            // Get documents by representative_id
+            // Note: This requires the database function get_documents(p_representative_id) to exist
+            const params = {
+                p_representative_id: representativeId || null
+            };
+            return await this.callFunction('get_documents', params, token);
+        },
+
         getComplianceDocuments: async function (filters = {}, token = null) {
             const params = {
                 p_farm_id: filters.farmId || null,

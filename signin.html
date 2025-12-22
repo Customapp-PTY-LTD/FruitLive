@@ -515,8 +515,12 @@
         const SUPABASE_URL = 'https://ekgjuvnrzyacoltcypio.supabase.co';
         const SUPABASE_ANON_KEY = 'your-anon-key-here'; // Replace with your actual anon key
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+        let supabaseClient;
+        if (typeof window.supabase !== 'undefined') {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.warn('Supabase library not loaded');
+        }
         // Get client GUID from URL query parameter
         function getClientGUID() {
             const urlParams = new URLSearchParams(window.location.search);

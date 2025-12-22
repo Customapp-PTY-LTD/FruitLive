@@ -6,6 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FruitLive - Admin Portal</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- Immediate Authentication Check - Must run before any content loads -->
+    <script>
+        (function() {
+            // Check authentication immediately
+            const token = localStorage.getItem('lambda_token');
+            const userInfo = localStorage.getItem('user_info');
+            const isAuthenticated = !!(token && userInfo);
+            
+            if (!isAuthenticated) {
+                // Get cc parameter from localStorage or URL
+                const ccParam = localStorage.getItem('client_guid') || 
+                               new URLSearchParams(window.location.search).get('cc') ||
+                               '9e1d961a-bfc2-469d-8526-8af75f536656';
+                
+                // Redirect to signin immediately - prevent any content from loading
+                const signinUrl = `signin.html?cc=${encodeURIComponent(ccParam)}`;
+                window.location.replace(signinUrl);
+                // Stop execution
+                throw new Error('Redirecting to signin');
+            }
+        })();
+    </script>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -335,9 +358,10 @@
     <script>
         // Initialize application
         document.addEventListener('DOMContentLoaded', function () {
-            // Check authentication first
-            const isAuthenticated = (typeof dataFunctions !== 'undefined' && dataFunctions.isAuthenticated()) ||
-                                   (typeof authService !== 'undefined' && authService.isAuthenticated());
+            // Check authentication first (backup check - immediate check in head should have already handled this)
+            const token = localStorage.getItem('lambda_token');
+            const userInfo = localStorage.getItem('user_info');
+            const isAuthenticated = !!(token && userInfo);
             
             if (!isAuthenticated) {
                 // Get cc parameter from localStorage or URL
@@ -347,7 +371,7 @@
                 
                 // Redirect to signin with cc parameter
                 const signinUrl = `signin.html?cc=${encodeURIComponent(ccParam)}`;
-                window.location.href = signinUrl;
+                window.location.replace(signinUrl);
                 return;
             }
 

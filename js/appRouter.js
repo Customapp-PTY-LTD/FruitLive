@@ -13,7 +13,22 @@ var _appRouter = function () {
         currentRoute: null,
         //------------
         init: async () => {
-
+            // Check authentication before initializing router
+            const token = localStorage.getItem('lambda_token');
+            const userInfo = localStorage.getItem('user_info');
+            const isAuthenticated = !!(token && userInfo);
+            
+            if (!isAuthenticated) {
+                // Get cc parameter from localStorage or URL
+                const ccParam = localStorage.getItem('client_guid') || 
+                               new URLSearchParams(window.location.search).get('cc') ||
+                               '9e1d961a-bfc2-469d-8526-8af75f536656';
+                
+                // Redirect to signin with cc parameter
+                const signinUrl = `signin.html?cc=${encodeURIComponent(ccParam)}`;
+                window.location.href = signinUrl;
+                return; // Stop initialization
+            }
 
             const breadCrumbs = sessionStorage.getItem('breadCrumbs');
             if (breadCrumbs) {
@@ -130,21 +145,24 @@ var _appRouter = function () {
             console.info("appRouter.loadContent", routeName);
 
             // Check authentication for all routes
-            if (typeof dataFunctions !== 'undefined') {
-                const isAuthenticated = dataFunctions.isAuthenticated() ||
-                                       (typeof authService !== 'undefined' && authService.isAuthenticated());
+            const token = localStorage.getItem('lambda_token');
+            const userInfo = localStorage.getItem('user_info');
+            const isAuthenticated = !!(token && userInfo);
+            
+            if (!isAuthenticated) {
+                // Get cc parameter from localStorage or URL
+                const ccParam = localStorage.getItem('client_guid') || 
+                               new URLSearchParams(window.location.search).get('cc') ||
+                               '9e1d961a-bfc2-469d-8526-8af75f536656';
                 
-                if (!isAuthenticated) {
-                    // Get cc parameter from localStorage or URL
-                    const ccParam = localStorage.getItem('client_guid') || 
-                                   new URLSearchParams(window.location.search).get('cc') ||
-                                   '9e1d961a-bfc2-469d-8526-8af75f536656';
-                    
-                    // Redirect to signin with cc parameter
-                    const signinUrl = `signin.html?cc=${encodeURIComponent(ccParam)}`;
-                    window.location.href = signinUrl;
-                    return { success: false, errors: ['Authentication required'] };
-                }
+                // Redirect to signin with cc parameter
+                const signinUrl = `signin.html?cc=${encodeURIComponent(ccParam)}`;
+                window.location.replace(signinUrl);
+                return { success: false, errors: ['Authentication required'] };
+            }
+            
+            // Additional check using dataFunctions if available (for role-based access)
+            if (typeof dataFunctions !== 'undefined') {
 
                 // Check if this is a user management module
                 const userManagementModules = ['users-grid', 'roles-grid', 'role-permissions-grid', 'role-features-grid'];
